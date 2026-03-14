@@ -21,13 +21,16 @@ function generateIntro(listing: Listing): string {
   return `Hi,\n\nI came across your ${typeLabel} in ${listing.neighborhood} (€${listing.price.toLocaleString()}/mo, ${listing.size}m²) and I'm very interested.${furnishedNote}\n\nI'd love to schedule a viewing at your earliest convenience — could you let me know your availability?\n\nBest regards,`
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string): string | null {
+  if (!dateStr || dateStr.trim() === '') return null
   try {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleDateString('en-GB', {
       day: 'numeric', month: 'long', year: 'numeric',
     })
   } catch {
-    return dateStr
+    return null
   }
 }
 
@@ -126,15 +129,19 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
                   <span className="flex items-center gap-1.5 px-3 h-8 bg-secondary rounded-full text-[13px] font-medium text-foreground">
                     <Home size={13} strokeWidth={1.8} />{listing.type}
                   </span>
-                  <span className="flex items-center gap-1.5 px-3 h-8 bg-secondary rounded-full text-[13px] font-medium text-foreground">
-                    <Ruler size={13} strokeWidth={1.8} />{listing.size}m²
-                  </span>
+                  {listing.size > 0 && (
+                    <span className="flex items-center gap-1.5 px-3 h-8 bg-secondary rounded-full text-[13px] font-medium text-foreground">
+                      <Ruler size={13} strokeWidth={1.8} />{listing.size}m²
+                    </span>
+                  )}
                   <span className="px-3 h-8 bg-secondary rounded-full text-[13px] font-medium text-foreground flex items-center capitalize">
                     {listing.furnished}
                   </span>
-                  <span className="flex items-center gap-1.5 px-3 h-8 bg-secondary rounded-full text-[13px] font-medium text-foreground">
-                    <Calendar size={13} strokeWidth={1.8} />From {formatDate(listing.availableFrom)}
-                  </span>
+                  {formatDate(listing.availableFrom) && (
+                    <span className="flex items-center gap-1.5 px-3 h-8 bg-secondary rounded-full text-[13px] font-medium text-foreground">
+                      <Calendar size={13} strokeWidth={1.8} />From {formatDate(listing.availableFrom)}
+                    </span>
+                  )}
                 </div>
 
                 {listing.description && (

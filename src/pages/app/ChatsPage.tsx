@@ -9,7 +9,7 @@ import { useOnboarding } from '../../context/OnboardingContext'
 import { Listing } from '../../data/listings'
 import { useListings } from '../../context/ListingsContext'
 
-const FEED_FILTERS = ['All', 'New matches', 'Your alerts'] as const
+const FEED_FILTERS = ['All', 'Your alerts', 'New matches'] as const
 type FeedFilter = typeof FEED_FILTERS[number]
 
 const SOURCE_BADGE_BG: Record<string, string> = {
@@ -117,91 +117,7 @@ export default function AlertsPage() {
           </div>
         )}
 
-        {/* Feed content based on filter */}
-        {(feedFilter === 'All' || feedFilter === 'New matches') && (
-          <>
-            {newMatches.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 px-8 py-16 text-center">
-                <div className="w-14 h-14 bg-secondary rounded-3xl flex items-center justify-center">
-                  <Bell size={22} strokeWidth={1.5} className="text-muted" />
-                </div>
-                <p className="text-[15px] font-semibold text-foreground">No new matches</p>
-                <p className="text-sm text-muted">
-                  {alerts.length === 0
-                    ? 'Create an alert to start receiving matches.'
-                    : 'New listings matching your alerts will appear here.'}
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Today's matches */}
-                {groupedMatches.today.length > 0 && (
-                  <div>
-                    <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-                      <p className="text-xs font-semibold text-muted uppercase tracking-wide">
-                        New matches
-                      </p>
-                      <span className="text-xs text-muted">Today</span>
-                    </div>
-                    {groupedMatches.today.map((listing, i) => (
-                      <button
-                        key={listing.id}
-                        onClick={() => setActiveListing(listing)}
-                        className="w-full flex items-center gap-3.5 px-5 py-3.5 active:bg-secondary transition-colors"
-                      >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${SOURCE_BADGE_BG[listing.source] ?? 'bg-secondary'}`}>
-                          <Home size={16} strokeWidth={1.8} className="text-foreground" />
-                        </div>
-                        <div className="flex-1 text-left min-w-0">
-                          <p className="text-xs font-medium text-muted">
-                            {listing.source}
-                          </p>
-                          <p className="text-[15px] text-foreground mt-0.5 leading-snug">
-                            {listing.neighborhood} — €{listing.price.toLocaleString()}/mo · {listing.type}
-                          </p>
-                        </div>
-                        <span className="text-xs text-muted flex-shrink-0">{listing.postedAt}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Earlier matches */}
-                {groupedMatches.earlier.length > 0 && (
-                  <div>
-                    <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-                      <p className="text-xs font-semibold text-muted uppercase tracking-wide">
-                        Earlier
-                      </p>
-                    </div>
-                    {groupedMatches.earlier.map((listing) => (
-                      <button
-                        key={listing.id}
-                        onClick={() => setActiveListing(listing)}
-                        className="w-full flex items-center gap-3.5 px-5 py-3.5 active:bg-secondary transition-colors"
-                      >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${SOURCE_BADGE_BG[listing.source] ?? 'bg-secondary'}`}>
-                          <Home size={16} strokeWidth={1.8} className="text-foreground" />
-                        </div>
-                        <div className="flex-1 text-left min-w-0">
-                          <p className="text-xs font-medium text-muted">
-                            {listing.source}
-                          </p>
-                          <p className="text-[15px] text-foreground mt-0.5 leading-snug">
-                            {listing.neighborhood} — €{listing.price.toLocaleString()}/mo · {listing.type}
-                          </p>
-                        </div>
-                        <span className="text-xs text-muted flex-shrink-0">{listing.postedAt}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
-
-        {/* Your alerts section */}
+        {/* Your alerts section — shown first */}
         {(feedFilter === 'All' || feedFilter === 'Your alerts') && alerts.length > 0 && (
           <div className="px-5 pt-5 pb-8">
             <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">
@@ -294,6 +210,90 @@ export default function AlertsPage() {
               })}
             </AnimatePresence>
           </div>
+        )}
+
+        {/* New matches section — shown after alerts */}
+        {(feedFilter === 'All' || feedFilter === 'New matches') && (
+          <>
+            {newMatches.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 px-8 py-16 text-center">
+                <div className="w-14 h-14 bg-secondary rounded-3xl flex items-center justify-center">
+                  <Bell size={22} strokeWidth={1.5} className="text-muted" />
+                </div>
+                <p className="text-[15px] font-semibold text-foreground">No new matches</p>
+                <p className="text-sm text-muted">
+                  {alerts.length === 0
+                    ? 'Create an alert to start receiving matches.'
+                    : 'New listings matching your alerts will appear here.'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Today's matches */}
+                {groupedMatches.today.length > 0 && (
+                  <div>
+                    <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+                      <p className="text-xs font-semibold text-muted uppercase tracking-wide">
+                        New matches
+                      </p>
+                      <span className="text-xs text-muted">Today</span>
+                    </div>
+                    {groupedMatches.today.map((listing) => (
+                      <button
+                        key={listing.id}
+                        onClick={() => setActiveListing(listing)}
+                        className="w-full flex items-center gap-3.5 px-5 py-3.5 active:bg-secondary transition-colors"
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${SOURCE_BADGE_BG[listing.source] ?? 'bg-secondary'}`}>
+                          <Home size={16} strokeWidth={1.8} className="text-foreground" />
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-xs font-medium text-muted">
+                            {listing.source}
+                          </p>
+                          <p className="text-[15px] text-foreground mt-0.5 leading-snug">
+                            {listing.neighborhood} — €{listing.price.toLocaleString()}/mo · {listing.type}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted flex-shrink-0">{listing.postedAt}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Earlier matches */}
+                {groupedMatches.earlier.length > 0 && (
+                  <div>
+                    <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+                      <p className="text-xs font-semibold text-muted uppercase tracking-wide">
+                        Earlier
+                      </p>
+                    </div>
+                    {groupedMatches.earlier.map((listing) => (
+                      <button
+                        key={listing.id}
+                        onClick={() => setActiveListing(listing)}
+                        className="w-full flex items-center gap-3.5 px-5 py-3.5 active:bg-secondary transition-colors"
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${SOURCE_BADGE_BG[listing.source] ?? 'bg-secondary'}`}>
+                          <Home size={16} strokeWidth={1.8} className="text-foreground" />
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-xs font-medium text-muted">
+                            {listing.source}
+                          </p>
+                          <p className="text-[15px] text-foreground mt-0.5 leading-snug">
+                            {listing.neighborhood} — €{listing.price.toLocaleString()}/mo · {listing.type}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted flex-shrink-0">{listing.postedAt}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
 
         {/* Empty state for "Your alerts" filter with no alerts */}

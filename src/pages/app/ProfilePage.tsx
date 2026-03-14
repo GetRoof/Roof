@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, Bell, MapPin, CreditCard, LogOut, ChevronRight, X, Heart } from 'lucide-react'
+import { User, CreditCard, LogOut, ChevronRight, X, Heart } from 'lucide-react'
 import BottomNav from '../../components/layout/BottomNav'
 import RoofLogo from '../../assets/RoofLogo'
 import { useOnboarding } from '../../context/OnboardingContext'
@@ -13,18 +13,6 @@ export default function ProfilePage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false)
 
   const menuItems = [
-    {
-      icon: MapPin,
-      label: 'Search preferences',
-      desc: `${data.cities?.join(', ') || 'Amsterdam'} · €${data.budgetMin || 600}–€${data.budgetMax || 1200}/mo`,
-      action: () => navigate('/app/preferences'),
-    },
-    {
-      icon: Bell,
-      label: 'Notification settings',
-      desc: 'Instant, email & digest',
-      action: () => navigate('/app/notifications'),
-    },
     {
       icon: CreditCard,
       label: 'Upgrade to Premium',

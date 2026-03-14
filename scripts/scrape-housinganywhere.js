@@ -165,11 +165,34 @@ async function scrapePage(page, url, city) {
           if (textLower.startsWith('room') || textLower.includes('room in')) listingType = 'Private room'
           else if (textLower.startsWith('studio') || textLower.includes('studio in')) listingType = 'Studio'
 
-          // Extract location: "Apartment in Korte Geuzenstraat, Amsterdam"
-          const locationMatch = allText.match(/(?:Apartment|Studio|Room)\s+in\s+([^,]+),\s*([^\d]+?)(?:\d|$)/)
-          const street = locationMatch ? locationMatch[1].trim() : ''
-          const listingCity = locationMatch ? locationMatch[2].trim() : city
-          const title = street ? `${street}, ${listingCity}` : listingCity
+          // Extract location: "Apartment in Korte Geuzenstraat, Amsterdam" or "Room in Amsterdam"
+          const locationMatch = allText.match(/(?:Apartment|Studio|Room)\s+in\s+([^,\d]+?)(?:,\s*([^\d]+?))?(?:\d|$)/)
+          let street = ''
+          let listingCity = city
+          if (locationMatch) {
+            // Two-part: "Room in Street, City" or one-part: "Room in City"
+            if (locationMatch[2]) {
+              street = locationMatch[1].trim()
+              listingCity = locationMatch[2].trim()
+            } else {
+              // Could be just city or just street — if it matches city name, use as city
+              const part = locationMatch[1].trim()
+              if (part.toLowerCase() === city.toLowerCase()) {
+                listingCity = part
+              } else {
+                street = part
+              }
+            }
+          }
+          // Also try to extract from URL path: /room/utXXXX/street-name-city
+          if (!street && href) {
+            const urlParts = href.split('/')
+            const lastSlug = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2] || ''
+            if (lastSlug && lastSlug.length > 5 && !lastSlug.startsWith('ut')) {
+              street = lastSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+            }
+          }
+          const title = street ? `${listingType} in ${street}` : `${listingType} in ${listingCity}`
 
           return price > 0 && listingUrl ? {
             title,
@@ -228,7 +251,7 @@ async function upsertListings(listings) {
     const extId = stableId(l.url)
     const row = {
       external_id: extId,
-      title: l.title,
+      title: l.title || `${l.listingType || 'Listing'} in ${l.city}`,
       neighborhood: l.neighborhood,
       city: l.city,
       price: l.price,

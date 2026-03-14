@@ -84,27 +84,35 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [seenIds, setSeenIds] = useState<ReadonlySet<string>>(new Set())
 
-  // Load alerts from Supabase when user signs in
-  useEffect(() => {
+  // Load alerts from Supabase
+  const loadAlerts = useCallback(async () => {
     if (!user) return
-    supabase
+    const { data } = await supabase
       .from('alerts')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        if (data) {
-          const mapped = data.map(rowToAlert)
-          if (mapped.length > 0) mapped[0].isMain = true
-          setAlerts(mapped)
-        }
-      })
+    if (data) {
+      const mapped = data.map(rowToAlert)
+      if (mapped.length > 0) mapped[0].isMain = true
+      setAlerts(mapped)
+    }
   }, [user])
 
-  // Clear local alerts when user signs out
+  // Load alerts on mount and when user changes
   useEffect(() => {
-    if (!user) setAlerts([])
-  }, [user])
+    if (!user) { setAlerts([]); return }
+    loadAlerts()
+  }, [user, loadAlerts])
+
+  // Reload alerts when app returns from background
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && user) loadAlerts()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [user, loadAlerts])
 
   const addAlert = useCallback((data: Omit<Alert, 'id' | 'createdAt'>) => {
     if (user) {
@@ -144,7 +152,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       if (data.budgetMin !== undefined) dbData.budget_min = data.budgetMin
       if (data.budgetMax !== undefined) dbData.budget_max = data.budgetMax
       if (data.filters !== undefined) dbData.filters = data.filters
-      supabase.from('alerts').update(dbData).eq('id', id)
+      supabase.from('alerts').update(dbData).eq('id', id).then(() => {})
     }
   }, [user])
 

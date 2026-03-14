@@ -90,12 +90,12 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, onPanEnd, onTap }: Card
         }}
       >
         {/* Image */}
-        <div className="flex-1 relative bg-secondary overflow-hidden min-h-0">
+        <div className="flex-1 relative bg-neutral-100 overflow-hidden min-h-0">
           {listing.image ? (
             <img
               src={listing.image}
               alt={listing.title}
-              className="w-full h-full object-cover select-none"
+              className="w-full h-full object-contain select-none"
               draggable={false}
               onError={(e) => {
                 ;(e.target as HTMLImageElement).style.display = 'none'

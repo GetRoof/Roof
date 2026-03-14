@@ -73,7 +73,7 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        <p className="text-center text-xs text-muted pb-8">Roof v0.1.0 · Made in Amsterdam 🇳🇱</p>
+        <p className="text-center text-xs text-muted pb-8">Roof v0.1.0 · Made by expats ❤️</p>
       </div>
 
       <BottomNav />

@@ -48,9 +48,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (_event === 'TOKEN_REFRESHED' || _event === 'SIGNED_IN') {
+        setLoading(false)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    // Re-check session when app returns from background (Capacitor)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setSession(session)
+        })
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const signUp = async (email: string, password: string, name: string) => {

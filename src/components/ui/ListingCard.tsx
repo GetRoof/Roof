@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useEffect, useCallback } from 'react'
+import { forwardRef, useRef, useEffect, useCallback, memo } from 'react'
 import { motion, useMotionValue, useTransform, MotionValue } from 'framer-motion'
 import { Home, Ruler } from 'lucide-react'
 import { Listing } from '../../data/listings'
@@ -16,7 +16,7 @@ interface Props {
   isViewed?: boolean
 }
 
-const ListingCard = forwardRef<HTMLDivElement, Props>(
+const ListingCard = memo(forwardRef<HTMLDivElement, Props>(
   ({ listing, index, onClick, isSaved, onToggleSave, scrollY, isViewed }, externalRef) => {
     const internalRef = useRef<HTMLDivElement>(null)
     const cardTopRef = useRef(0)
@@ -32,41 +32,34 @@ const ListingCard = forwardRef<HTMLDivElement, Props>(
       [externalRef],
     )
 
-    // Capture offsetTop after each render so reflowing doesn't break positions
+    // Capture offsetTop once on mount and on resize
     useEffect(() => {
-      if (internalRef.current) {
-        cardTopRef.current = internalRef.current.offsetTop
+      const measure = () => {
+        if (internalRef.current) cardTopRef.current = internalRef.current.offsetTop
       }
-    })
+      measure()
+      window.addEventListener('resize', measure)
+      return () => window.removeEventListener('resize', measure)
+    }, [])
 
-    // Scale: 1.0 → 0.92 as card scrolls off the top of the feed
+    // Scale: 1.0 → 0.95 as card scrolls off the top of the feed
     const scrollScale = useTransform(effectiveScrollY, (y) => {
       if (!scrollY) return 1
       const progress = Math.max(0, Math.min(1, (y - cardTopRef.current) / CARD_HEIGHT))
-      return 1 - progress * 0.08
-    })
-
-    // Blur: 0px → 6px as card scrolls off the top
-    const scrollBlur = useTransform(effectiveScrollY, (y) => {
-      if (!scrollY) return 'blur(0px)'
-      const progress = Math.max(0, Math.min(1, (y - cardTopRef.current) / CARD_HEIGHT))
-      return `blur(${(progress * 6).toFixed(1)}px)`
+      return 1 - progress * 0.05
     })
 
     return (
       <motion.div
         ref={setRef}
-        layout
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ delay: index * 0.04, duration: 0.28, ease: 'easeOut' }}
+        transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.28, ease: 'easeOut' }}
         onClick={onClick}
         style={{
           scale: scrollScale,
-          filter: scrollBlur,
           transformOrigin: 'top center',
-          willChange: 'transform, filter',
+          willChange: 'transform',
         }}
         className="bg-white rounded-3xl border border-border overflow-hidden shadow-xs cursor-pointer"
       >
@@ -87,16 +80,16 @@ const ListingCard = forwardRef<HTMLDivElement, Props>(
           ) : (
             <Home size={28} strokeWidth={1.2} className="text-neutral-300" />
           )}
-          {listing.isNew ? (
-            <div className="absolute top-3 left-3">
-              <span className="bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-                New
-              </span>
-            </div>
-          ) : isViewed ? (
+          {isViewed ? (
             <div className="absolute top-3 left-3">
               <span className="bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium px-2.5 py-1 rounded-full uppercase tracking-wide">
                 Viewed
+              </span>
+            </div>
+          ) : listing.isNew ? (
+            <div className="absolute top-3 left-3">
+              <span className="bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                New
               </span>
             </div>
           ) : null}
@@ -123,7 +116,7 @@ const ListingCard = forwardRef<HTMLDivElement, Props>(
         </div>
 
         {/* Info */}
-        <div className="p-4">
+        <div className="px-4 pt-4 pb-5">
           <div className="flex items-start justify-between gap-2 mb-1.5">
             <div>
               <p className="text-[17px] font-semibold text-foreground leading-tight">
@@ -160,7 +153,7 @@ const ListingCard = forwardRef<HTMLDivElement, Props>(
       </motion.div>
     )
   },
-)
+))
 
 ListingCard.displayName = 'ListingCard'
 export default ListingCard

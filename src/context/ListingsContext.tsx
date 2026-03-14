@@ -105,6 +105,9 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     setRefreshing(true)
+    // Trigger scrapers in the background (fire & forget)
+    supabase.functions.invoke('trigger-scrape').catch(() => {})
+    // Immediately re-fetch current listings from DB
     const data = await fetchFromSupabase()
     setListings(data)
     data.forEach((l) => knownIds.current.add(l.id))
