@@ -9,10 +9,10 @@ import Toggle from '../../components/ui/Toggle'
 const CITIES = ['Amsterdam', 'Rotterdam', 'Utrecht', 'The Hague', 'Eindhoven', 'Groningen']
 
 const housingTypes = [
+  { id: 'apartment', label: 'Apartment' },
+  { id: 'studio', label: 'Studio' },
   { id: 'private_room', label: 'Private bedroom' },
   { id: 'shared_room', label: 'Shared bedroom' },
-  { id: 'studio', label: 'Studio' },
-  { id: 'apartment', label: 'Apartment' },
   { id: 'student_residence', label: 'Student residence' },
 ]
 

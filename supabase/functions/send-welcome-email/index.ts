@@ -1,5 +1,3 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
 const FROM_EMAIL = 'Roof <hello@getroof.nl>'
 
@@ -138,7 +136,7 @@ function buildEmailHtml(name: string): string {
 </html>`
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // CORS for local dev
   if (req.method === 'OPTIONS') {
     return new Response(null, {

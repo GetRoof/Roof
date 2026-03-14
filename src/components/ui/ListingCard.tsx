@@ -72,7 +72,7 @@ const ListingCard = forwardRef<HTMLDivElement, Props>(
       >
         {/* Image */}
         <div className="relative aspect-[16/9] overflow-hidden bg-secondary flex items-center justify-center">
-          {listing.image ? (
+          {listing.image && listing.image.startsWith('http') ? (
             <img
               src={listing.image}
               alt={listing.title}
@@ -81,8 +81,7 @@ const ListingCard = forwardRef<HTMLDivElement, Props>(
               onError={(e) => {
                 const t = e.currentTarget
                 t.onerror = null
-                t.parentElement!.classList.add('no-image')
-                t.remove()
+                t.style.display = 'none'
               }}
             />
           ) : (

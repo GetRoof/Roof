@@ -31,8 +31,12 @@ function relativeTime(iso: string): string {
 }
 
 // Map Supabase DB row → app Listing shape
+function isRecent(iso: string, hours = 24): boolean {
+  return Date.now() - new Date(iso).getTime() < hours * 60 * 60 * 1000
+}
+
 function rowToListing(row: Record<string, unknown>): Listing {
-  const firstSeen = (row.first_seen_at as string) ?? new Date().toISOString()
+  const firstSeen = (row.first_seen_at as string) ?? (row.last_seen_at as string) ?? new Date().toISOString()
   return {
     id: row.id as string,
     title: row.title as string,
@@ -45,9 +49,9 @@ function rowToListing(row: Record<string, unknown>): Listing {
     furnished: (row.furnished as Listing['furnished']) ?? 'furnished',
     source: (row.source as Listing['source']) ?? 'Pararius',
     url: row.url as string,
-    image: (row.image_url as string) ?? '',
+    image: (row.image_url as string) || '',
     availableFrom: (row.available_from as string) ?? '',
-    isNew: (row.is_new as boolean) ?? false,
+    isNew: isRecent(firstSeen, 24),
     postedAt: relativeTime(firstSeen),
     description: (row.description as string) ?? '',
   }

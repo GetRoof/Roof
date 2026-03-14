@@ -27,6 +27,8 @@ import ProfilePage from './pages/app/ProfilePage'
 import SettingsPage from './pages/app/SettingsPage'
 import PreferencesPage from './pages/app/PreferencesPage'
 import NotificationSettingsPage from './pages/app/NotificationSettingsPage'
+import PrivacyPolicyPage from './pages/app/PrivacyPolicyPage'
+import TermsPage from './pages/app/TermsPage'
 
 // When running inside Capacitor (native iOS/Android), strip the fake phone frame
 // and go full screen with safe-area insets instead
@@ -70,6 +72,8 @@ export default function App() {
                   <Route path="/app/settings" element={<SettingsPage />} />
                   <Route path="/app/preferences" element={<PreferencesPage />} />
                   <Route path="/app/notifications" element={<NotificationSettingsPage />} />
+                  <Route path="/app/privacy" element={<PrivacyPolicyPage />} />
+                  <Route path="/app/terms" element={<TermsPage />} />
 
                   <Route path="*" element={<Navigate to="/splash" replace />} />
                 </Routes>

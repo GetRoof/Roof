@@ -13,6 +13,7 @@ export interface Alert {
   budgetMax: number
   filters: ActiveFilters
   createdAt: string
+  isMain?: boolean
 }
 
 export function alertMatchesListing(alert: Alert, l: Listing): boolean {
@@ -92,7 +93,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
       .then(({ data }) => {
-        if (data) setAlerts(data.map(rowToAlert))
+        if (data) {
+          const mapped = data.map(rowToAlert)
+          if (mapped.length > 0) mapped[0].isMain = true
+          setAlerts(mapped)
+        }
       })
   }, [user])
 
@@ -109,18 +114,28 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         .select()
         .single()
         .then(({ data: row }) => {
-          if (row) setAlerts((prev) => [...prev, rowToAlert(row)])
+          if (row) setAlerts((prev) => {
+            const alert = rowToAlert(row)
+            // First alert becomes the main alert
+            if (prev.length === 0) alert.isMain = true
+            return [...prev, alert]
+          })
         })
     } else {
-      setAlerts((prev) => [
-        ...prev,
-        { ...data, id: Date.now().toString(), createdAt: new Date().toISOString() },
-      ])
+      setAlerts((prev) => {
+        const alert: Alert = { ...data, id: Date.now().toString(), createdAt: new Date().toISOString() }
+        if (prev.length === 0) alert.isMain = true
+        return [...prev, alert]
+      })
     }
   }, [user])
 
   const updateAlert = useCallback((id: string, data: Partial<Omit<Alert, 'id' | 'createdAt'>>) => {
-    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, ...data } : a)))
+    setAlerts((prev) => prev.map((a) => {
+      if (a.id !== id) return a
+      const { isMain: _, ...safeData } = data as Partial<Alert>
+      return { ...a, ...safeData }
+    }))
     if (user) {
       const dbData: Record<string, unknown> = {}
       if (data.name !== undefined) dbData.name = data.name
@@ -134,7 +149,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const removeAlert = useCallback((id: string) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== id))
+    setAlerts((prev) => {
+      const target = prev.find((a) => a.id === id)
+      if (target?.isMain) return prev // Can't delete main alert
+      return prev.filter((a) => a.id !== id)
+    })
     if (user) {
       supabase.from('alerts').delete().eq('id', id)
     }

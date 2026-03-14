@@ -182,7 +182,6 @@ async function upsertListings(listings) {
       source: 'Funda',
       url: l.url,
       image_url: hostedImageUrl || l.imageUrl,
-      is_new: true,
       is_active: true,
       last_seen_at: now,
     }

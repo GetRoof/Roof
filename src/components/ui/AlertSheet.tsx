@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Bell } from 'lucide-react'
+import { X, Bell, Pencil } from 'lucide-react'
 import { Alert } from '../../context/AlertsContext'
-import { DEFAULT_FILTERS } from './FiltersSheet'
+import { ActiveFilters, DEFAULT_FILTERS } from './FiltersSheet'
 
 const NL_CITIES = [
   'Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven',
@@ -12,9 +12,19 @@ const NL_CITIES = [
 
 const HOUSING_TYPES: { value: Alert['housingType']; label: string }[] = [
   { value: 'all', label: 'All types' },
-  { value: 'room', label: 'Room' },
-  { value: 'studio', label: 'Studio' },
   { value: 'apartment', label: 'Apartment' },
+  { value: 'studio', label: 'Studio' },
+  { value: 'room', label: 'Room' },
+]
+
+const ROOM_OPTIONS = [1, 2, 3, 4] // 4 = 4+
+
+const SIZE_PRESETS = [
+  { label: '< 20m²', min: '', max: '20' },
+  { label: '20–40m²', min: '20', max: '40' },
+  { label: '40–60m²', min: '40', max: '60' },
+  { label: '60–80m²', min: '60', max: '80' },
+  { label: '80m²+', min: '80', max: '' },
 ]
 
 function generateName(cities: string[], type: Alert['housingType']): string {
@@ -27,25 +37,45 @@ interface Props {
   open: boolean
   onClose: () => void
   onSave: (data: Omit<Alert, 'id' | 'createdAt'>) => void
+  onUpdate?: (id: string, data: Partial<Omit<Alert, 'id' | 'createdAt'>>) => void
+  editAlert?: Alert | null
   initialCities?: string[]
 }
 
-export default function AlertSheet({ open, onClose, onSave, initialCities = [] }: Props) {
+export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert, initialCities = [] }: Props) {
   const [cities, setCities] = useState<string[]>(initialCities)
   const [cityInput, setCityInput] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [housingType, setHousingType] = useState<Alert['housingType']>('all')
   const [budgetMin, setBudgetMin] = useState('')
   const [budgetMax, setBudgetMax] = useState('')
+  const [rooms, setRooms] = useState<number[]>([])
+  const [sizeMin, setSizeMin] = useState('')
+  const [sizeMax, setSizeMax] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const isEditing = !!editAlert
 
   useEffect(() => {
     if (open) {
-      setCities(initialCities)
+      if (editAlert) {
+        setCities(editAlert.cities)
+        setHousingType(editAlert.housingType)
+        setBudgetMin(editAlert.budgetMin > 0 ? editAlert.budgetMin.toString() : '')
+        setBudgetMax(editAlert.budgetMax > 0 ? editAlert.budgetMax.toString() : '')
+        setRooms(editAlert.filters.rooms)
+        setSizeMin(editAlert.filters.sizeMin)
+        setSizeMax(editAlert.filters.sizeMax)
+      } else {
+        setCities(initialCities)
+        setHousingType('all')
+        setBudgetMin('')
+        setBudgetMax('')
+        setRooms([])
+        setSizeMin('')
+        setSizeMax('')
+      }
       setCityInput('')
-      setHousingType('all')
-      setBudgetMin('')
-      setBudgetMax('')
     }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -60,9 +90,20 @@ export default function AlertSheet({ open, onClose, onSave, initialCities = [] }
     inputRef.current?.focus()
   }
 
+  const toggleRoom = (r: number) => {
+    setRooms((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r])
+  }
+
   const handleSubmit = async () => {
     if ('Notification' in window && Notification.permission === 'default') {
       await Notification.requestPermission()
+    }
+
+    const filters: ActiveFilters = {
+      ...DEFAULT_FILTERS,
+      rooms,
+      sizeMin,
+      sizeMax,
     }
 
     const data: Omit<Alert, 'id' | 'createdAt'> = {
@@ -71,15 +112,20 @@ export default function AlertSheet({ open, onClose, onSave, initialCities = [] }
       housingType,
       budgetMin: budgetMin ? parseInt(budgetMin) : 0,
       budgetMax: budgetMax ? parseInt(budgetMax) : 0,
-      filters: DEFAULT_FILTERS,
+      filters,
     }
 
-    onSave(data)
+    if (isEditing && onUpdate) {
+      onUpdate(editAlert.id, data)
+    } else {
+      onSave(data)
+    }
+
     onClose()
 
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if (!isEditing && 'Notification' in window && Notification.permission === 'granted') {
       setTimeout(() => {
-        new Notification('🏠 New listing found!', {
+        new Notification('New listing found!', {
           body: `A match for "${data.name}" was just posted.`,
         })
       }, 5000)
@@ -113,8 +159,12 @@ export default function AlertSheet({ open, onClose, onSave, initialCities = [] }
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-border">
               <div>
-                <h2 className="text-[17px] font-bold text-foreground">New Alert</h2>
-                <p className="text-xs text-muted mt-0.5">We'll notify you when matches are posted</p>
+                <h2 className="text-[17px] font-bold text-foreground">
+                  {isEditing ? 'Edit Alert' : 'New Alert'}
+                </h2>
+                <p className="text-xs text-muted mt-0.5">
+                  {isEditing ? 'Update your alert criteria' : "We'll notify you when matches are posted"}
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -200,7 +250,7 @@ export default function AlertSheet({ open, onClose, onSave, initialCities = [] }
               </div>
 
               {/* Budget */}
-              <div className="px-5 py-5 pb-8">
+              <div className="px-5 py-5 border-b border-border">
                 <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Monthly budget</p>
                 <div className="flex gap-3 items-center">
                   <div className="flex-1 relative">
@@ -226,6 +276,81 @@ export default function AlertSheet({ open, onClose, onSave, initialCities = [] }
                   </div>
                 </div>
               </div>
+
+              {/* Number of rooms */}
+              <div className="px-5 py-5 border-b border-border">
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Number of rooms</p>
+                <div className="flex gap-2">
+                  {ROOM_OPTIONS.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => toggleRoom(r)}
+                      className={`flex-1 h-11 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
+                        rooms.includes(r)
+                          ? 'bg-foreground text-white border-foreground'
+                          : 'bg-white text-foreground border-border'
+                      }`}
+                    >
+                      {r === 4 ? '4+' : r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Size */}
+              <div className="px-5 py-5 pb-8">
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Size (m²)</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {SIZE_PRESETS.map(({ label, min, max }) => {
+                    const active = sizeMin === min && sizeMax === max
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => {
+                          if (active) { setSizeMin(''); setSizeMax('') }
+                          else { setSizeMin(min); setSizeMax(max) }
+                        }}
+                        className={`px-3 h-9 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
+                          active
+                            ? 'bg-foreground text-white border-foreground'
+                            : 'bg-white text-foreground border-border'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block text-xs text-muted mb-1.5">Min</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={sizeMin}
+                        onChange={(e) => setSizeMin(e.target.value)}
+                        className="w-full h-12 px-3 pr-8 rounded-xl border border-border text-foreground text-[15px] focus:border-foreground transition-colors outline-none"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">m²</span>
+                    </div>
+                  </div>
+                  <div className="flex items-end pb-3 text-muted">—</div>
+                  <div className="flex-1">
+                    <label className="block text-xs text-muted mb-1.5">Max</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="∞"
+                        value={sizeMax}
+                        onChange={(e) => setSizeMax(e.target.value)}
+                        className="w-full h-12 px-3 pr-8 rounded-xl border border-border text-foreground text-[15px] focus:border-foreground transition-colors outline-none"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">m²</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* CTA */}
@@ -235,8 +360,17 @@ export default function AlertSheet({ open, onClose, onSave, initialCities = [] }
                 disabled={cities.length === 0}
                 className="w-full h-14 bg-foreground text-white rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 disabled:opacity-40 active:scale-[0.98] transition-all"
               >
-                <Bell size={16} />
-                Create alert
+                {isEditing ? (
+                  <>
+                    <Pencil size={16} />
+                    Save changes
+                  </>
+                ) : (
+                  <>
+                    <Bell size={16} />
+                    Create alert
+                  </>
+                )}
               </button>
             </div>
           </motion.div>

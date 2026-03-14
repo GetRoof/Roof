@@ -1,8 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Bell, Mail, Zap, TrendingDown } from 'lucide-react'
+import { Bell, Mail, Zap, Clock, ChevronRight } from 'lucide-react'
 import Toggle from '../../components/ui/Toggle'
 import BottomNav from '../../components/layout/BottomNav'
 import { useNotifications } from '../../context/NotificationsContext'
+
+const ABOUT_ITEMS = [
+  { label: 'Privacy Policy', path: '/app/privacy' },
+  { label: 'Terms of Service', path: '/app/terms' },
+]
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -10,12 +15,9 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Header */}
-      <div className="flex-shrink-0 px-5 pt-14 pb-4 border-b border-border flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="active:opacity-60">
-          <ChevronLeft size={22} strokeWidth={2} />
-        </button>
-        <h1 className="text-xl font-bold text-foreground">Settings</h1>
+      {/* Header — left-aligned, no back button (tab bar page) */}
+      <div className="flex-shrink-0 px-5 pt-14 pb-4 border-b border-border">
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide">
@@ -46,14 +48,15 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
-                <TrendingDown size={16} strokeWidth={1.8} />
+                <Clock size={16} strokeWidth={1.8} />
               </div>
               <div className="flex-1">
-                <Toggle label="Price drops" checked={prefs.priceDrops} onChange={(v) => setPref('priceDrops', v)} />
-                <p className="text-xs text-muted mt-0.5">When a saved listing reduces its price</p>
+                <Toggle label="Daily digest" checked={prefs.dailyDigest} onChange={(v) => setPref('dailyDigest', v)} />
+                <p className="text-xs text-muted mt-0.5">
+                  Receive a daily email at 6 PM with all new listings that matched your search criteria throughout the day
+                </p>
               </div>
             </div>
-            <Toggle label="Daily digest" checked={prefs.dailyDigest} onChange={(v) => setPref('dailyDigest', v)} />
           </div>
         </div>
 
@@ -62,10 +65,10 @@ export default function SettingsPage() {
         {/* About */}
         <div className="px-5 py-5 space-y-4">
           <h2 className="text-[15px] font-semibold text-foreground">About</h2>
-          {['Privacy Policy', 'Terms of Service', 'Contact Support', 'Rate Roof ⭐'].map(item => (
-            <button key={item} className="flex justify-between items-center w-full text-[15px] text-foreground py-1 active:opacity-60">
-              {item}
-              <ChevronLeft size={16} className="text-muted rotate-180" />
+          {ABOUT_ITEMS.map(item => (
+            <button key={item.path} onClick={() => navigate(item.path)} className="flex justify-between items-center w-full text-[15px] text-foreground py-1 active:opacity-60">
+              {item.label}
+              <ChevronRight size={16} className="text-muted" />
             </button>
           ))}
         </div>

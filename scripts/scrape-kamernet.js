@@ -156,7 +156,6 @@ async function upsertListings(listings) {
       furnished: l.furnished,
       source: 'Kamernet',
       url: l.url,
-      is_new: true,
       is_active: true,
       last_seen_at: now,
     }

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Zap, Mail, BookOpen, TrendingDown } from 'lucide-react'
+import { ChevronLeft, Zap, Mail, Clock } from 'lucide-react'
 import Toggle from '../../components/ui/Toggle'
 import { useNotifications } from '../../context/NotificationsContext'
 
@@ -8,25 +8,19 @@ const notificationItems = [
     key: 'instantAlerts' as const,
     icon: Zap,
     label: 'Instant alerts',
-    desc: 'Get notified the moment a listing matching your criteria appears',
+    desc: 'Get notified the moment a listing appears',
   },
   {
     key: 'emailAlerts' as const,
     icon: Mail,
     label: 'Email alerts',
-    desc: 'Matching listings sent directly to your inbox with one-click apply',
+    desc: 'Matching listings sent to your inbox',
   },
   {
     key: 'dailyDigest' as const,
-    icon: BookOpen,
+    icon: Clock,
     label: 'Daily digest',
-    desc: 'A summary of today\'s best matching listings, every morning',
-  },
-  {
-    key: 'priceDrops' as const,
-    icon: TrendingDown,
-    label: 'Price drops',
-    desc: 'Get notified when a listing you\'ve saved reduces its price',
+    desc: 'Receive a daily email at 6 PM with all new listings that matched your search criteria throughout the day',
   },
 ]
 
@@ -53,8 +47,8 @@ export default function NotificationSettingsPage() {
           <div className="space-y-5">
             {notificationItems.map(({ key, icon: Icon, label, desc }) => (
               <div key={key} className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-secondary rounded-2xl flex-shrink-0 flex items-center justify-center mt-0.5">
-                  <Icon size={17} strokeWidth={1.8} className="text-foreground" />
+                <div className="w-9 h-9 bg-secondary rounded-xl flex-shrink-0 flex items-center justify-center mt-0.5">
+                  <Icon size={16} strokeWidth={1.8} className="text-foreground" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-0.5">

@@ -4,7 +4,6 @@ interface NotificationsState {
   instantAlerts: boolean
   emailAlerts: boolean
   dailyDigest: boolean
-  priceDrops: boolean
 }
 
 interface NotificationsContextType {
@@ -17,7 +16,6 @@ const NotificationsContext = createContext<NotificationsContextType>({
     instantAlerts: true,
     emailAlerts: true,
     dailyDigest: false,
-    priceDrops: false,
   },
   setPref: () => {},
 })
@@ -27,7 +25,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     instantAlerts: true,
     emailAlerts: true,
     dailyDigest: false,
-    priceDrops: false,
   })
 
   const setPref = (key: keyof NotificationsState, value: boolean) => {

@@ -160,7 +160,6 @@ async function upsertListings(listings) {
       rooms: l.rooms,
       source: 'Huurwoningen',
       url: l.url,
-      is_new: true,
       is_active: true,
       last_seen_at: now,
     }

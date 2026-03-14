@@ -8,7 +8,7 @@ export interface Listing {
   size: number
   rooms: number
   furnished: 'furnished' | 'unfurnished' | 'upholstered'
-  source: 'Pararius' | 'Kamernet' | 'Huurwoningen' | 'Funda'
+  source: 'Pararius' | 'Kamernet' | 'Huurwoningen' | 'Funda' | 'HousingAnywhere' | 'DirectWonen'
   url: string
   image: string
   availableFrom: string
@@ -205,6 +205,8 @@ export const sourceColors: Record<Listing['source'], string> = {
   Kamernet: '#E84B3C',
   Huurwoningen: '#00B090',
   Funda: '#F97316',
+  HousingAnywhere: '#7C3AED',
+  DirectWonen: '#0891B2',
 }
 
 export const ALL_NEIGHBORHOODS = [...new Set(listings.map((l) => l.neighborhood))]

@@ -228,7 +228,6 @@ async function upsertListings(listings) {
       url: l.url,
       available_from: null,
       description: null,
-      is_new: true,
       is_active: true,
       last_seen_at: now,
     }

@@ -5,10 +5,12 @@ import { useListings } from '../../context/ListingsContext'
 import { Listing } from '../../data/listings'
 
 const SOURCE_COLORS: Record<string, string> = {
-  Pararius: 'bg-orange-100 text-orange-700',
-  Funda: 'bg-red-100 text-red-700',
-  Kamernet: 'bg-blue-100 text-blue-700',
-  Huurwoningen: 'bg-green-100 text-green-700',
+  Pararius: 'bg-blue-50 text-blue-700',
+  Kamernet: 'bg-red-50 text-red-700',
+  Huurwoningen: 'bg-emerald-50 text-emerald-700',
+  Funda: 'bg-orange-50 text-orange-700',
+  HousingAnywhere: 'bg-purple-50 text-purple-700',
+  DirectWonen: 'bg-cyan-50 text-cyan-700',
 }
 
 interface Props {
@@ -74,7 +76,7 @@ export default function NotificationsSheet({ open, onClose, onOpenListing }: Pro
                   <p className="text-sm text-muted">Pull down to refresh and check for new matches.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div>
                   <div className="px-5 py-2.5">
                     <p className="text-xs font-semibold text-muted uppercase tracking-wide">New listings</p>
                   </div>

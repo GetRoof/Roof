@@ -7,7 +7,7 @@
  *
  * Required env: SUPABASE_SERVICE_KEY (set in .env or inline)
  *
- * Runs: Pararius → Kamernet → Huurwoningen → Image Upload
+ * Runs: Pararius → Kamernet → Huurwoningen → HousingAnywhere → DirectWonen → Image Upload
  * Each scraper deduplicates by external_id so overlapping runs are safe.
  * Funda is excluded — their bot protection blocks all automated access.
  */
@@ -24,7 +24,9 @@ const args = process.argv.slice(2).join(' ')
 const scrapers = [
   { name: 'Pararius',     file: 'scrape-pararius.js',    extra: '' },
   { name: 'Kamernet',     file: 'scrape-kamernet.js',    extra: '--type room' },
-  { name: 'Huurwoningen', file: 'scrape-huurwoningen.js',extra: '' },
+  { name: 'Huurwoningen',    file: 'scrape-huurwoningen.js',    extra: '' },
+  { name: 'HousingAnywhere', file: 'scrape-housinganywhere.js', extra: '' },
+  { name: 'DirectWonen',     file: 'scrape-directwonen.js',     extra: '' },
 ]
 
 console.log('═'.repeat(60))
