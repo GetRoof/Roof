@@ -1,0 +1,317 @@
+/**
+ * Pararius scraper — scrapes listings and upserts them into Supabase
+ *
+ * Usage:
+ *   node scrape-pararius.js
+ *   node scrape-pararius.js --city Amsterdam --type apartment --max 1500
+ *
+ * Required env vars (set in .env or inline):
+ *   SUPABASE_URL      — your project URL
+ *   SUPABASE_SERVICE_KEY — service_role key (from Supabase Settings → API)
+ *
+ * Install deps first: npm install && npx playwright install chromium
+ */
+
+require('dotenv').config({ path: require('path').join(__dirname, '.env') })
+const { chromium } = require('playwright')
+const { createClient } = require('@supabase/supabase-js')
+const crypto = require('crypto')
+const uploadImage = require('./lib/upload-image')
+
+// ---------------------------------------------------------------------------
+// Supabase client (service role — bypasses RLS to allow scraper writes)
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '' // set via env
+
+let supabase = null
+if (SUPABASE_SERVICE_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+}
+
+// ---------------------------------------------------------------------------
+// Config — edit these to match your Roof app preferences, or pass CLI args
+// ---------------------------------------------------------------------------
+const DEFAULTS = {
+  cities: ['Amsterdam'],
+  housingType: 'apartment', // 'room' | 'studio' | 'apartment' | 'all'
+  budgetMin: 0,
+  budgetMax: 1500,
+}
+
+// ---------------------------------------------------------------------------
+// CLI arg parsing  --city Amsterdam --type room --min 500 --max 1200
+// ---------------------------------------------------------------------------
+function parseCLI() {
+  const args = process.argv.slice(2)
+  const get = (flag) => {
+    const i = args.indexOf(flag)
+    return i !== -1 && args[i + 1] ? args[i + 1] : null
+  }
+  return {
+    cities: get('--city') ? [get('--city')] : DEFAULTS.cities,
+    housingType: get('--type') || DEFAULTS.housingType,
+    budgetMin: get('--min') ? parseInt(get('--min')) : DEFAULTS.budgetMin,
+    budgetMax: get('--max') ? parseInt(get('--max')) : DEFAULTS.budgetMax,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// URL builder
+// ---------------------------------------------------------------------------
+const TYPE_MAP = {
+  room: 'rooms',
+  studio: 'apartments',
+  apartment: 'apartments',
+  all: 'apartments',
+}
+
+// Maps Pararius listing type text → app type
+const LISTING_TYPE_MAP = {
+  'apartment': 'Apartment',
+  'studio': 'Studio',
+  'room': 'Private room',
+  'shared room': 'Shared room',
+  'house': 'Apartment',
+}
+
+function buildSearchUrl(city, housingType, budgetMin, budgetMax) {
+  const citySlug = city.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  const typeSlug = TYPE_MAP[housingType] ?? 'apartments'
+  const priceSegment = budgetMax > 0 ? `/${budgetMin}-${budgetMax}` : ''
+  return `https://www.pararius.com/${typeSlug}/${citySlug}${priceSegment}`
+}
+
+function stableId(source, url) {
+  return crypto.createHash('sha256').update(`${source}:${url}`).digest('hex').slice(0, 32)
+}
+
+function parsePrice(text) {
+  const cleaned = text.split('\n')[0].replace(/[^0-9]/g, '')
+  return parseInt(cleaned) || 0
+}
+
+// ---------------------------------------------------------------------------
+// Scraper
+// ---------------------------------------------------------------------------
+async function scrapePage(page, url) {
+  console.log(`\n  Fetching: ${url}`)
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+
+  // Handle cookie consent if it appears
+  const consentBtn = page.locator('button:has-text("Agree"), button:has-text("Accept"), button:has-text("Akkoord")')
+  if (await consentBtn.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+    await consentBtn.first().click()
+    await page.waitForTimeout(500)
+  }
+
+  // Scroll down to trigger lazy-loading of images
+  for (let i = 0; i < 15; i++) {
+    await page.evaluate(() => window.scrollBy(0, 500))
+    await page.waitForTimeout(200)
+  }
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.waitForTimeout(300)
+
+  // Extract all data in one evaluate call (much faster than individual locator calls)
+  // Use only section.listing-search-item to avoid duplicate li+section matches
+  const results = await page.evaluate(() => {
+    const items = document.querySelectorAll('section.listing-search-item')
+    return Array.from(items).map(item => {
+      try {
+        const titleEl = item.querySelector('a.listing-search-item__link--title, h2.listing-search-item__title a')
+        const title = titleEl?.textContent?.trim() || ''
+        const href = titleEl?.getAttribute('href') || ''
+        const url = href ? (href.startsWith('http') ? href : 'https://www.pararius.com' + href) : ''
+
+        const priceText = (item.querySelector('.listing-search-item__price')?.textContent || '').trim()
+        const price = parseInt(priceText.split('\n')[0].replace(/[^0-9]/g, '')) || 0
+
+        const location = (item.querySelector('.listing-search-item__sub-title, .listing-search-item__location')?.textContent || '').trim()
+
+        const sizeText = (item.querySelector('.illustrated-features__item--surface-area')?.textContent || '').trim()
+        const size = parseInt(sizeText.replace(/[^0-9]/g, '')) || null
+
+        const roomsText = (item.querySelector('.illustrated-features__item--number-of-rooms')?.textContent || '').trim()
+        const rooms = parseInt(roomsText.replace(/[^0-9]/g, '')) || null
+
+        let imageUrl = null
+        const srcset = item.querySelector('source[srcset]')?.getAttribute('srcset')
+        if (srcset) {
+          const parts = srcset.split(',')
+          imageUrl = parts[parts.length - 1].trim().split(' ')[0] || null
+        }
+        if (!imageUrl) {
+          const src = item.querySelector('img.picture__image, img[class*="picture"]')?.getAttribute('src')
+          if (src && src.startsWith('http')) imageUrl = src
+        }
+
+        const neighborhood = location.split('•').map(s => s.trim())[0] || null
+
+        let listingType = null
+        if (url.includes('/apartments/') || url.includes('/studio/')) listingType = 'Apartment'
+        if (url.includes('/rooms/')) listingType = 'Private room'
+
+        return title && url ? { title, price, priceText, location, neighborhood, size, rooms, url, imageUrl, listingType } : null
+      } catch { return null }
+    }).filter(Boolean)
+  })
+
+  console.log(`  Found ${results.length} listings`)
+  return results
+}
+
+// ---------------------------------------------------------------------------
+// Pagination
+// ---------------------------------------------------------------------------
+async function scrapeAllPages(page, startUrl, maxPages = 5) {
+  const allResults = []
+  let currentUrl = startUrl
+  let pageNum = 1
+
+  while (currentUrl && pageNum <= maxPages) {
+    console.log(`\n📄 Page ${pageNum}`)
+    const results = await scrapePage(page, currentUrl)
+    allResults.push(...results)
+
+    const nextLink = page.locator('a[rel="next"], a:has-text("Volgende"), li.pagination__item--next a').first()
+    const hasNext = await nextLink.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (hasNext && results.length > 0) {
+      const nextHref = await nextLink.getAttribute('href').catch(() => null)
+      currentUrl = nextHref
+        ? nextHref.startsWith('http') ? nextHref : `https://www.pararius.com${nextHref}`
+        : null
+      pageNum++
+    } else {
+      break
+    }
+  }
+
+  return allResults
+}
+
+// ---------------------------------------------------------------------------
+// Supabase upsert
+// ---------------------------------------------------------------------------
+async function upsertListings(listings) {
+  if (!supabase) {
+    console.log('\n⚠️  SUPABASE_SERVICE_KEY not set — skipping database upsert')
+    return
+  }
+
+  const now = new Date().toISOString()
+  // Deduplicate by external_id (same URL can appear multiple times in scrape)
+  const seen = new Set()
+  const unique = listings.filter((l) => {
+    const id = stableId('Pararius', l.url)
+    if (seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+
+  // Store external image URL first; batch-upload via fix-images.js afterward
+  // Only include image_url when we have one — never overwrite existing hosted images with null
+  const rows = unique.map((l) => {
+    const extId = stableId('Pararius', l.url)
+    const row = {
+      external_id: extId,
+      title: l.title,
+      neighborhood: l.neighborhood,
+      city: l.city,
+      price: l.price,
+      type: l.listingType,
+      size: l.size,
+      rooms: l.rooms,
+      furnished: null,
+      source: 'Pararius',
+      url: l.url,
+      available_from: null,
+      description: null,
+      is_new: true,
+      is_active: true,
+      last_seen_at: now,
+    }
+    if (l.imageUrl) row.image_url = l.imageUrl
+    return row
+  })
+
+  const { data, error } = await supabase
+    .from('listings')
+    .upsert(rows, {
+      onConflict: 'external_id',
+      ignoreDuplicates: false, // update last_seen_at on re-run
+    })
+    .select('id')
+
+  if (error) {
+    console.error('\n❌ Supabase upsert error:', error.message)
+  } else {
+    console.log(`\n✅ Upserted ${data?.length ?? rows.length} listing(s) to Supabase`)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+async function main() {
+  const { cities, housingType, budgetMin, budgetMax } = parseCLI()
+
+  console.log('━'.repeat(60))
+  console.log('🏠  Pararius Scraper — Roof')
+  console.log('━'.repeat(60))
+  console.log(`Cities     : ${cities.join(', ')}`)
+  console.log(`Type       : ${housingType}`)
+  console.log(`Budget     : €${budgetMin} – €${budgetMax}/mo`)
+  console.log(`Supabase   : ${supabase ? '✅ connected' : '⚠️  no service key (console only)'}`)
+  console.log('━'.repeat(60))
+
+  const browser = await chromium.launch({ headless: true })
+  const context = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    locale: 'en-US',
+    viewport: { width: 1280, height: 800 },
+  })
+  const page = await context.newPage()
+
+  const allListings = []
+
+  for (const city of cities) {
+    console.log(`\n🔍 Searching in ${city}...`)
+    const url = buildSearchUrl(city, housingType, budgetMin, budgetMax)
+    const listings = await scrapeAllPages(page, url, 3)
+    allListings.push(...listings.map((l) => ({ ...l, city })))
+  }
+
+  await browser.close()
+
+  // ---------------------------------------------------------------------------
+  // Output
+  // ---------------------------------------------------------------------------
+  console.log('\n' + '━'.repeat(60))
+  console.log(`✅  Found ${allListings.length} listing${allListings.length !== 1 ? 's' : ''}`)
+  console.log('━'.repeat(60))
+
+  if (allListings.length === 0) {
+    console.log('\nNo results. Try adjusting your criteria or check the URL manually.')
+    return
+  }
+
+  allListings.forEach((l, i) => {
+    console.log(`\n[${i + 1}] ${l.title}`)
+    console.log(`    💰 ${l.priceText}  (parsed: €${l.price})`)
+    console.log(`    📍 ${l.location || l.city}`)
+    console.log(`    🔗 ${l.url}`)
+  })
+
+  // Upsert to Supabase
+  await upsertListings(allListings)
+
+  console.log('\n' + '━'.repeat(60))
+}
+
+main().catch((err) => {
+  console.error('\n❌ Scraper error:', err.message)
+  process.exit(1)
+})

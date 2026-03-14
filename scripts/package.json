@@ -1,0 +1,14 @@
+{
+  "name": "roof-scraper",
+  "version": "1.0.0",
+  "description": "Pararius scraper for Roof app",
+  "main": "scrape-pararius.js",
+  "scripts": {
+    "scrape": "node scrape-pararius.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.1",
+    "dotenv": "^17.3.1",
+    "playwright": "^1.41.0"
+  }
+}
