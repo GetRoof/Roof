@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react'
 import { ActiveFilters, DEFAULT_FILTERS } from '../components/ui/FiltersSheet'
-import { listings, Listing } from '../data/listings'
+import { Listing } from '../data/listings'
+import { useListings } from './ListingsContext'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import { useAuth } from './AuthContext'
@@ -82,6 +83,7 @@ const AlertsContext = createContext<AlertsContextType>({
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { listings } = useListings()
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [seenIds, setSeenIds] = useState<ReadonlySet<string>>(new Set())
 
@@ -183,7 +185,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         .forEach((l) => ids.add(l.id))
     })
     return ids
-  }, [alerts])
+  }, [alerts, listings])
 
   const unreadCount = useMemo(() => {
     let count = 0

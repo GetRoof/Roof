@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check } from 'lucide-react'
-import { listings } from '../../data/listings'
-
-const ALL_CITIES = [...new Set(listings.map((l) => l.city))].sort()
 
 interface Props {
   open: boolean
+  cities: string[]
   selectedCities: string[]
   onChange: (cities: string[]) => void
   onClose: () => void
 }
 
-export default function CityPickerSheet({ open, selectedCities, onChange, onClose }: Props) {
+export default function CityPickerSheet({ open, cities, selectedCities, onChange, onClose }: Props) {
   const [draft, setDraft] = useState<string[]>(selectedCities)
 
   // Reset draft to committed selection whenever sheet opens
@@ -48,7 +46,7 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
           />
 
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] z-50 flex flex-col"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 flex flex-col"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -56,7 +54,7 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-neutral-200" />
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
             {/* Header */}
@@ -64,7 +62,7 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
               <h2 className="text-[17px] font-bold text-foreground">Select cities</h2>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60"
+                className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60 text-foreground"
               >
                 <X size={15} strokeWidth={2} />
               </button>
@@ -77,8 +75,8 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
                 onClick={() => setDraft([])}
                 className={`flex items-center justify-between w-full h-12 px-4 rounded-2xl border transition-all active:scale-[0.99] ${
                   isAll
-                    ? 'bg-foreground border-foreground text-white'
-                    : 'bg-white border-border text-foreground'
+                    ? 'bg-foreground border-foreground text-background'
+                    : 'bg-background border-border text-foreground'
                 }`}
               >
                 <span className="text-[15px] font-medium">All cities</span>
@@ -86,7 +84,7 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
               </button>
 
               {/* Individual cities */}
-              {ALL_CITIES.map((city) => {
+              {cities.map((city) => {
                 const selected = draft.includes(city)
                 return (
                   <button
@@ -94,8 +92,8 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
                     onClick={() => toggle(city)}
                     className={`flex items-center justify-between w-full h-12 px-4 rounded-2xl border transition-all active:scale-[0.99] ${
                       selected
-                        ? 'bg-foreground border-foreground text-white'
-                        : 'bg-white border-border text-foreground'
+                        ? 'bg-foreground border-foreground text-background'
+                        : 'bg-background border-border text-foreground'
                     }`}
                   >
                     <span className="text-[15px] font-medium">{city}</span>
@@ -109,7 +107,7 @@ export default function CityPickerSheet({ open, selectedCities, onChange, onClos
             <div className="px-5 pt-3 pb-8 flex-shrink-0 border-t border-border">
               <button
                 onClick={handleApply}
-                className="w-full h-14 bg-foreground text-white rounded-2xl text-[15px] font-semibold active:scale-[0.98] transition-all"
+                className="w-full h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold active:scale-[0.98] transition-all"
               >
                 {isAll
                   ? 'Show all cities'

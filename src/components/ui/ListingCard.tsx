@@ -62,24 +62,20 @@ const ListingCard = memo(forwardRef<HTMLDivElement, Props>(
           transformOrigin: 'top center',
           willChange: 'transform',
         }}
-        className="bg-white rounded-3xl border border-border overflow-hidden shadow-xs cursor-pointer"
+        className="bg-background rounded-3xl border border-border overflow-hidden shadow-xs cursor-pointer"
       >
         {/* Image */}
         <div className="relative aspect-[16/9] overflow-hidden bg-secondary flex items-center justify-center">
-          {listing.image && listing.image.startsWith('http') ? (
+          {/* Placeholder always visible behind the image */}
+          <Home size={28} strokeWidth={1.2} className="text-neutral-300" />
+          {listing.image && listing.image.startsWith('http') && (
             <img
               src={listing.image}
               alt={listing.title}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
-              onError={(e) => {
-                const t = e.currentTarget
-                t.onerror = null
-                t.style.display = 'none'
-              }}
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
             />
-          ) : (
-            <Home size={28} strokeWidth={1.2} className="text-neutral-300" />
           )}
           {isViewed ? (
             <div className="absolute top-3 left-3">
@@ -101,14 +97,14 @@ const ListingCard = memo(forwardRef<HTMLDivElement, Props>(
               onToggleSave()
             }}
             data-tour="save"
-            className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xs active:scale-90 transition-transform"
+            className="absolute top-3 right-3 w-8 h-8 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xs active:scale-90 transition-transform text-foreground"
           >
             <svg
               width="16"
               height="16"
               viewBox="0 0 24 24"
-              fill={isSaved ? '#0a0a0a' : 'none'}
-              stroke="#0a0a0a"
+              fill={isSaved ? 'currentColor' : 'none'}
+              stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"

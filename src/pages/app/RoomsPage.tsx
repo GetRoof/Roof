@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { usePersistedState } from '../../hooks/usePersistedState'
 // framer-motion scroll only
 import { MapPin, Layers, Filter } from 'lucide-react'
 import { useScroll } from 'framer-motion'
@@ -29,15 +30,19 @@ const PLATFORM_FILTERS = ['All', 'Pararius', 'Kamernet', 'Huurwoningen', 'Housin
 type PlatformFilter = typeof PLATFORM_FILTERS[number]
 
 export default function RoomsPage() {
-  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('All')
+  const [platformFilter, setPlatformFilter] = usePersistedState<PlatformFilter>('roof-platform-filter', 'All')
   const [showFilters, setShowFilters] = useState(false)
   const [showCityPicker, setShowCityPicker] = useState(false)
   const [showCatchUp, setShowCatchUp] = useState(false)
-  const [filters, setFilters] = useState<ActiveFilters>(DEFAULT_FILTERS)
-  const [selectedCities, setSelectedCities] = useState<string[]>([])
+  const [filters, setFilters] = usePersistedState<ActiveFilters>('roof-active-filters', DEFAULT_FILTERS)
+  const [selectedCities, setSelectedCities] = usePersistedState<string[]>('roof-selected-cities', [])
   const [activeListing, setActiveListing] = useState<Listing | null>(null)
   const { isSaved, toggleSave } = useSaved()
   const { listings, loading, refresh } = useListings()
+
+  // Derived from real Supabase data — no dummy fallbacks
+  const allCities = useMemo(() => [...new Set(listings.map((l) => l.city))].sort(), [listings])
+  const allNeighborhoods = useMemo(() => [...new Set(listings.map((l) => l.neighborhood).filter(Boolean))].sort(), [listings])
   const { isViewed, markViewed } = useViewed()
   const { alerts } = useAlerts()
   const { showTour, completeTour, skipTour } = useOnboarding()
@@ -85,6 +90,8 @@ export default function RoomsPage() {
   const filtered = alertFiltered.filter((l) => {
     if (selectedCities.length > 0 && !selectedCities.includes(l.city)) return false
     if (platformFilter !== 'All' && l.source !== platformFilter) return false
+    if (filters.priceMin && l.price < parseInt(filters.priceMin)) return false
+    if (filters.priceMax && l.price > parseInt(filters.priceMax)) return false
     if (filters.sizeMin && l.size < parseInt(filters.sizeMin)) return false
     if (filters.sizeMax && l.size > parseInt(filters.sizeMax)) return false
     if (filters.rooms.length > 0) {
@@ -99,9 +106,9 @@ export default function RoomsPage() {
   const newCount = filtered.filter((l) => l.isNew).length
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex-shrink-0 px-5 pt-14 pb-3 bg-white">
+      <div className="flex-shrink-0 px-5 pt-14 pb-3 bg-background">
         <div className="flex items-center justify-between mb-4">
           <div>
             <button
@@ -120,13 +127,13 @@ export default function RoomsPage() {
               onClick={() => setShowFilters(true)}
               className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                 activeFilterCount > 0
-                  ? 'bg-foreground text-white'
+                  ? 'bg-foreground text-background'
                   : 'bg-secondary text-foreground'
               }`}
             >
               <Filter size={16} strokeWidth={1.8} />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 border-2 border-white text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 border-2 border-background text-white text-[9px] font-bold flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -136,9 +143,9 @@ export default function RoomsPage() {
               data-tour="catchup"
               className="relative w-9 h-9 bg-secondary rounded-full flex items-center justify-center"
             >
-              <Layers size={16} strokeWidth={1.8} />
+              <Layers size={16} strokeWidth={1.8} className="text-foreground" />
               {newCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background" />
               )}
             </button>
           </div>
@@ -156,8 +163,8 @@ export default function RoomsPage() {
                 onClick={() => handlePlatformFilter(p)}
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
                   platformFilter === p
-                    ? 'bg-foreground text-white border-foreground'
-                    : 'bg-white text-foreground border-border'
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'bg-background text-foreground border-border'
                 }`}
               >
                 {p} · {count}
@@ -189,7 +196,7 @@ export default function RoomsPage() {
             </div>
           ) : platformFilter === 'Funda' ? (
             <div className="flex flex-col flex-1 items-center justify-center gap-3 px-8 text-center">
-              <div className="w-14 h-14 bg-orange-50 rounded-3xl flex items-center justify-center text-2xl">
+              <div className="w-14 h-14 bg-orange-50 dark:bg-orange-950 rounded-3xl flex items-center justify-center text-2xl">
                 🏗
               </div>
               <div>
@@ -200,7 +207,7 @@ export default function RoomsPage() {
               </div>
               <button
                 onClick={() => setPlatformFilter('All')}
-                className="mt-1 px-5 h-10 bg-foreground text-white rounded-full text-sm font-medium"
+                className="mt-1 px-5 h-10 bg-foreground text-background rounded-full text-sm font-medium"
               >
                 Browse all listings
               </button>
@@ -220,7 +227,7 @@ export default function RoomsPage() {
                   setSelectedCities([])
                   setPlatformFilter('All')
                 }}
-                className="mt-1 px-5 h-10 bg-foreground text-white rounded-full text-sm font-medium"
+                className="mt-1 px-5 h-10 bg-foreground text-background rounded-full text-sm font-medium"
               >
                 Reset filters
               </button>
@@ -249,6 +256,7 @@ export default function RoomsPage() {
       <FiltersSheet
         open={showFilters}
         filters={filters}
+        neighborhoods={allNeighborhoods}
         onChange={handleFiltersChange}
         onClose={() => setShowFilters(false)}
         onReset={() => setFilters(DEFAULT_FILTERS)}
@@ -256,6 +264,7 @@ export default function RoomsPage() {
 
       <CityPickerSheet
         open={showCityPicker}
+        cities={allCities}
         selectedCities={selectedCities}
         onChange={setSelectedCities}
         onClose={() => setShowCityPicker(false)}

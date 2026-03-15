@@ -9,18 +9,19 @@ export default {
     join(__dirname, 'index.html'),
     join(__dirname, 'src/**/*.{js,ts,jsx,tsx}'),
   ],
+  darkMode: 'media',
   theme: {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        background: '#ffffff',
-        foreground: '#0a0a0a',
-        muted: '#737373',
-        border: '#e5e5e5',
-        secondary: '#f5f5f5',
-        accent: '#7c3aed',
+        background: 'rgb(var(--color-background) / <alpha-value>)',
+        foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        muted:      'rgb(var(--color-muted) / <alpha-value>)',
+        border:     'rgb(var(--color-border) / <alpha-value>)',
+        secondary:  'rgb(var(--color-secondary) / <alpha-value>)',
+        accent:     '#7c3aed',
       },
       borderRadius: {
         md: '6px',

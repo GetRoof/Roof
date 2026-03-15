@@ -12,8 +12,8 @@ export default function Chip({ label, selected, onToggle }: ChipProps) {
         inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm
         transition-all duration-150 active:scale-95 select-none
         ${selected
-          ? 'bg-foreground text-white border-foreground'
-          : 'bg-white text-foreground border-neutral-300'
+          ? 'bg-foreground text-background border-foreground'
+          : 'bg-background text-foreground border-border'
         }
       `}
     >

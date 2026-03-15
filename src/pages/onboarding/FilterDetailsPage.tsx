@@ -66,7 +66,7 @@ export default function FilterDetailsPage() {
                   value={sizeMin}
                   onChange={(e) => setSizeMin(e.target.value)}
                   placeholder="Min"
-                  className="w-full h-12 px-4 rounded-xl border border-border text-[15px] text-foreground bg-white focus:border-foreground transition-colors"
+                  className="w-full h-12 px-4 rounded-xl border border-border text-[15px] text-foreground bg-background focus:border-foreground transition-colors"
                 />
               </div>
               <div className="flex items-center text-muted text-sm">–</div>
@@ -76,7 +76,7 @@ export default function FilterDetailsPage() {
                   value={sizeMax}
                   onChange={(e) => setSizeMax(e.target.value)}
                   placeholder="Max"
-                  className="w-full h-12 px-4 rounded-xl border border-border text-[15px] text-foreground bg-white focus:border-foreground transition-colors"
+                  className="w-full h-12 px-4 rounded-xl border border-border text-[15px] text-foreground bg-background focus:border-foreground transition-colors"
                 />
               </div>
             </div>
@@ -92,8 +92,8 @@ export default function FilterDetailsPage() {
                   onClick={() => toggleBedroom(o.value)}
                   className={`flex-1 h-12 rounded-xl text-sm font-medium border transition-all ${
                     bedrooms.includes(o.value)
-                      ? 'bg-foreground text-white border-foreground'
-                      : 'bg-white text-foreground border-border'
+                      ? 'bg-foreground text-background border-foreground'
+                      : 'bg-background text-foreground border-border'
                   }`}
                 >
                   {o.label}
@@ -112,8 +112,8 @@ export default function FilterDetailsPage() {
                   onClick={() => setInterior(o.value)}
                   className={`px-4 h-9 rounded-full text-sm font-medium border transition-all ${
                     interior === o.value
-                      ? 'bg-foreground text-white border-foreground'
-                      : 'bg-white text-foreground border-border'
+                      ? 'bg-foreground text-background border-foreground'
+                      : 'bg-background text-foreground border-border'
                   }`}
                 >
                   {o.label}

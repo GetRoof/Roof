@@ -24,7 +24,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="flex flex-col h-full bg-white">
+      <div className="flex flex-col h-full bg-background">
         <div className="flex-shrink-0 px-5 pt-14 pb-4 border-b border-border">
           <h1 className="text-2xl font-bold text-foreground">Profile</h1>
         </div>
@@ -52,15 +52,12 @@ export default function ProfilePage() {
                 className="flex items-center gap-3 w-full py-4 border-b border-border last:border-0 active:opacity-60 transition-opacity"
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${highlight ? 'bg-foreground' : 'bg-secondary'}`}>
-                  <Icon size={16} strokeWidth={1.8} className={highlight ? 'text-white' : 'text-foreground'} />
+                  <Icon size={16} strokeWidth={1.8} className={highlight ? 'text-background' : 'text-foreground'} />
                 </div>
                 <div className="flex-1 text-left">
                   <p className={`text-[15px] ${highlight ? 'font-semibold' : ''} text-foreground`}>{label}</p>
                   {desc && <p className="text-xs text-muted mt-0.5">{desc}</p>}
                 </div>
-                {highlight && (
-                  <span className="text-[10px] font-bold bg-foreground text-white px-2 py-0.5 rounded-full mr-1">PRO</span>
-                )}
                 <ChevronRight size={16} className="text-muted flex-shrink-0" />
               </button>
             ))}
@@ -72,7 +69,7 @@ export default function ProfilePage() {
               onClick={() => navigate('/welcome')}
               className="flex items-center gap-3 w-full py-4 text-left active:opacity-60"
             >
-              <div className="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center">
+              <div className="w-9 h-9 bg-red-50 dark:bg-red-950 rounded-xl flex items-center justify-center">
                 <LogOut size={16} strokeWidth={1.8} className="text-red-500" />
               </div>
               <span className="text-[15px] text-red-500">Sign out</span>
@@ -98,7 +95,7 @@ export default function ProfilePage() {
 
             {/* Sheet */}
             <motion.div
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] z-50 pb-safe-bottom"
+              className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[32px] z-50 pb-safe-bottom"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -106,7 +103,7 @@ export default function ProfilePage() {
             >
               {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-neutral-200" />
+                <div className="w-10 h-1 rounded-full bg-border" />
               </div>
 
               <div className="px-6 pt-4 pb-8">
@@ -114,7 +111,7 @@ export default function ProfilePage() {
                 <div className="flex justify-end mb-4">
                   <button
                     onClick={() => setShowPremiumModal(false)}
-                    className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60"
+                    className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60 text-foreground"
                   >
                     <X size={15} strokeWidth={2} className="text-muted" />
                   </button>
@@ -122,7 +119,7 @@ export default function ProfilePage() {
 
                 {/* Logo */}
                 <div className="flex justify-center mb-5">
-                  <RoofLogo color="#0a0a0a" size={80} />
+                  <RoofLogo className="text-foreground" size={80} />
                 </div>
 
                 {/* Message */}
@@ -154,7 +151,7 @@ export default function ProfilePage() {
 
                 <button
                   onClick={() => setShowPremiumModal(false)}
-                  className="w-full h-14 bg-foreground text-white rounded-2xl text-[15px] font-semibold active:bg-neutral-800 transition-colors"
+                  className="w-full h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold active:opacity-80 transition-colors"
                 >
                   Got it 🙌
                 </button>

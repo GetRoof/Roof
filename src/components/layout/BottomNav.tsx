@@ -57,7 +57,7 @@ export default function BottomNav() {
   const { unreadCount } = useAlerts()
 
   return (
-    <div className="flex-shrink-0 bg-white border-t border-border">
+    <div className="flex-shrink-0 bg-background border-t border-border">
       <div className="flex items-center justify-around px-1 pb-safe-bottom py-2">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.path)

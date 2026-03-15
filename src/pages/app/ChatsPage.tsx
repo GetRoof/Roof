@@ -13,16 +13,16 @@ const FEED_FILTERS = ['All', 'Your alerts', 'New matches'] as const
 type FeedFilter = typeof FEED_FILTERS[number]
 
 const SOURCE_BADGE_BG: Record<string, string> = {
-  Pararius: 'bg-blue-50',
-  Kamernet: 'bg-red-50',
-  Huurwoningen: 'bg-emerald-50',
-  Funda: 'bg-orange-50',
-  HousingAnywhere: 'bg-purple-50',
-  DirectWonen: 'bg-cyan-50',
-  Rentola: 'bg-fuchsia-50',
-  'Kamer.nl': 'bg-amber-50',
-  Huurstunt: 'bg-teal-50',
-  '123Wonen': 'bg-indigo-50',
+  Pararius: 'bg-blue-50 dark:bg-blue-950',
+  Kamernet: 'bg-red-50 dark:bg-red-950',
+  Huurwoningen: 'bg-emerald-50 dark:bg-emerald-950',
+  Funda: 'bg-orange-50 dark:bg-orange-950',
+  HousingAnywhere: 'bg-purple-50 dark:bg-purple-950',
+  DirectWonen: 'bg-cyan-50 dark:bg-cyan-950',
+  Rentola: 'bg-fuchsia-50 dark:bg-fuchsia-950',
+  'Kamer.nl': 'bg-amber-50 dark:bg-amber-950',
+  Huurstunt: 'bg-teal-50 dark:bg-teal-950',
+  '123Wonen': 'bg-indigo-50 dark:bg-indigo-950',
 }
 
 export default function AlertsPage() {
@@ -56,16 +56,16 @@ export default function AlertsPage() {
   }, [newMatches])
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-background relative">
       {/* Header — left-aligned, consistent */}
       <div className="flex-shrink-0 px-5 pt-14 pb-3">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-2xl font-bold text-foreground">Alerts</h1>
           <button
             onClick={() => setShowSheet(true)}
-            className="flex items-center gap-1.5 h-9 px-4 bg-foreground text-white rounded-full text-sm font-semibold active:opacity-75 transition-opacity"
+            className="flex items-center gap-1.5 h-9 px-4 bg-foreground text-background rounded-full text-sm font-semibold active:opacity-75 transition-opacity"
           >
-            <Plus size={14} strokeWidth={2.5} />
+            <Plus size={14} strokeWidth={2.5} className="text-background" />
             New
           </button>
         </div>
@@ -83,8 +83,8 @@ export default function AlertsPage() {
               onClick={() => setFeedFilter(f)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
                 feedFilter === f
-                  ? 'bg-foreground text-white border-foreground'
-                  : 'bg-white text-foreground border-border'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-foreground border-border'
               }`}
             >
               {f}
@@ -116,7 +116,7 @@ export default function AlertsPage() {
             </div>
             <button
               onClick={() => setShowSheet(true)}
-              className="mt-3 h-9 px-4 bg-foreground text-white rounded-full text-sm font-semibold active:opacity-75 transition-opacity"
+              className="mt-3 h-9 px-4 bg-foreground text-background rounded-full text-sm font-semibold active:opacity-75 transition-opacity"
             >
               Create alert
             </button>
@@ -144,7 +144,7 @@ export default function AlertsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ delay: i * 0.04, duration: 0.25 }}
-                    className="mb-3 bg-white border border-border rounded-2xl p-4"
+                    className="mb-3 bg-background border border-border rounded-2xl p-4"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -153,7 +153,7 @@ export default function AlertsPage() {
                             {alert.name}
                           </p>
                           {alert.isMain && (
-                            <span className="flex-shrink-0 bg-foreground text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            <span className="flex-shrink-0 bg-foreground text-background text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                               Main
                             </span>
                           )}
@@ -169,13 +169,13 @@ export default function AlertsPage() {
                               key={city}
                               className="flex items-center gap-1 px-2.5 h-7 bg-secondary rounded-full text-[12px] font-medium text-foreground"
                             >
-                              <MapPin size={10} strokeWidth={2} />
+                              <MapPin size={10} strokeWidth={2} className="text-foreground" />
                               {city}
                             </span>
                           ))}
                           {alert.housingType !== 'all' && (
                             <span className="flex items-center gap-1 px-2.5 h-7 bg-secondary rounded-full text-[12px] font-medium text-foreground">
-                              <Home size={10} strokeWidth={2} />
+                              <Home size={10} strokeWidth={2} className="text-foreground" />
                               {alert.housingType}
                             </span>
                           )}
@@ -316,9 +316,9 @@ export default function AlertsPage() {
             </div>
             <button
               onClick={() => setShowSheet(true)}
-              className="flex items-center gap-2 h-12 px-6 bg-foreground text-white rounded-full text-[15px] font-semibold active:opacity-75 transition-opacity"
+              className="flex items-center gap-2 h-12 px-6 bg-foreground text-background rounded-full text-[15px] font-semibold active:opacity-75 transition-opacity"
             >
-              <Plus size={16} strokeWidth={2.5} />
+              <Plus size={16} strokeWidth={2.5} className="text-background" />
               Create your first alert
             </button>
           </div>

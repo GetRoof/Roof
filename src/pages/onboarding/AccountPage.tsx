@@ -71,7 +71,7 @@ export default function AccountPage() {
           <button
             onClick={handleGoogle}
             disabled={googleLoading}
-            className="w-full h-12 rounded-2xl border border-border bg-white flex items-center justify-center gap-3 text-[15px] font-medium text-foreground active:bg-secondary transition-colors disabled:opacity-60"
+            className="w-full h-12 rounded-2xl border border-border bg-background flex items-center justify-center gap-3 text-[15px] font-medium text-foreground active:bg-secondary transition-colors disabled:opacity-60"
           >
             <GoogleIcon />
             {googleLoading ? 'Redirecting…' : 'Continue with Google'}

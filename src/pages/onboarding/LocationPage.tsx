@@ -55,7 +55,7 @@ export default function LocationPage() {
         <div className="space-y-4">
           <div>
             <select
-              className="w-full h-14 px-4 rounded-xl border border-border text-foreground text-[15px] bg-white appearance-none focus:border-foreground transition-colors"
+              className="w-full h-14 px-4 rounded-xl border border-border text-foreground text-[15px] bg-background appearance-none focus:border-foreground transition-colors"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
             >
@@ -77,7 +77,7 @@ export default function LocationPage() {
               onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
             />
             {showDropdown && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-xs z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-xs z-10 overflow-hidden">
                 {suggestions.map((c) => (
                   <button
                     key={c}
@@ -94,7 +94,7 @@ export default function LocationPage() {
           {cities.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {cities.map((c) => (
-                <div key={c} className="inline-flex items-center gap-2 bg-foreground text-white px-3 py-1.5 rounded-full text-sm font-medium">
+                <div key={c} className="inline-flex items-center gap-2 bg-foreground text-background px-3 py-1.5 rounded-full text-sm font-medium">
                   📍 {c}
                   <button
                     onClick={() => removeCity(c)}

@@ -45,7 +45,7 @@ export default function WelcomePage() {
 
   return (
     <motion.div
-      className="flex flex-col h-full bg-white"
+      className="flex flex-col h-full bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
@@ -57,7 +57,7 @@ export default function WelcomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
-          <RoofLogo color="#0a0a0a" size={72} />
+          <RoofLogo className="text-foreground" size={72} />
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -80,7 +80,7 @@ export default function WelcomePage() {
         <button
           onClick={handleGoogle}
           disabled={googleLoading}
-          className="w-full h-12 rounded-2xl border border-border bg-white flex items-center justify-center gap-3 text-[15px] font-medium text-foreground active:bg-secondary transition-colors disabled:opacity-60"
+          className="w-full h-12 rounded-2xl border border-border bg-background flex items-center justify-center gap-3 text-[15px] font-medium text-foreground active:bg-secondary transition-colors disabled:opacity-60"
         >
           <GoogleIcon />
           {googleLoading ? 'Redirecting…' : 'Continue with Google'}

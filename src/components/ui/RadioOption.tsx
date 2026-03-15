@@ -16,13 +16,13 @@ export default function RadioOption({ label, description, selected, onSelect }: 
           mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all duration-150
           ${selected
             ? 'border-foreground bg-foreground'
-            : 'border-neutral-300 bg-white'
+            : 'border-border bg-background'
           }
         `}
       >
         {selected && (
           <div className="w-full h-full rounded-full flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-background" />
           </div>
         )}
       </div>

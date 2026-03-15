@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect, ReactNode, RefObject } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
-import RoofLogo from '../../assets/RoofLogo'
+import RoofIcon from '../../assets/RoofIcon'
 
 const PULL_THRESHOLD = 64
 const MAX_PULL = 100
@@ -29,8 +28,8 @@ export default function PullToRefresh({ onRefresh, children, className = '', scr
 
   const pullY = useMotionValue(0)
   const indicatorHeight = useTransform(pullY, [0, MAX_PULL], [0, 48])
-  const logoScale = useTransform(pullY, [0, PULL_THRESHOLD], [0.5, 1])
-  const logoRotate = useTransform(pullY, [0, PULL_THRESHOLD], [0, 360])
+  const iconScale = useTransform(pullY, [0, PULL_THRESHOLD], [0.4, 1])
+  const iconOpacity = useTransform(pullY, [0, PULL_THRESHOLD * 0.3], [0, 1])
 
   useEffect(() => {
     const el = scrollRef.current
@@ -92,10 +91,17 @@ export default function PullToRefresh({ onRefresh, children, className = '', scr
         style={{ height: indicatorHeight }}
       >
         {phase === 'refreshing' || phase === 'completing' ? (
-          <Loader2 size={20} strokeWidth={2} className="text-muted animate-spin" />
+          /* Brand icon spins while refreshing */
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 0.9, ease: 'linear' }}
+          >
+            <RoofIcon size={22} className="text-foreground" />
+          </motion.div>
         ) : (
-          <motion.div style={{ scale: logoScale, rotate: logoRotate }}>
-            <RoofLogo color="#a3a3a3" size={24} />
+          /* Brand icon scales in as user pulls */
+          <motion.div style={{ scale: iconScale, opacity: iconOpacity }}>
+            <RoofIcon size={22} className="text-foreground" />
           </motion.div>
         )}
       </motion.div>

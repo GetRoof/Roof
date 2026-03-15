@@ -37,7 +37,7 @@ export default function LikedPage() {
   const count = (t: Tab) => t === 'Saved' ? saved.length : viewed.length
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-background">
       {/* Header — left-aligned, consistent with other tab pages */}
       <div className="flex-shrink-0 px-5 pt-14 pb-3">
         <h1 className="text-2xl font-bold text-foreground">Saved</h1>
@@ -55,8 +55,8 @@ export default function LikedPage() {
               onClick={() => setTab(t)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
                 tab === t
-                  ? 'bg-foreground text-white border-foreground'
-                  : 'bg-white text-foreground border-border'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-foreground border-border'
               }`}
             >
               {t}{count(t) > 0 ? ` (${count(t)})` : ''}

@@ -117,8 +117,8 @@ export default function ImageGallery({ images, alt = '' }: Props) {
             }}
             className={`rounded-full transition-all duration-200 ${
               i === index
-                ? 'w-2 h-2 bg-white'
-                : 'w-1.5 h-1.5 bg-white/50'
+                ? 'w-2 h-2 bg-background'
+                : 'w-1.5 h-1.5 bg-background/50'
             }`}
           />
         ))}

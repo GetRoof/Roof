@@ -145,7 +145,7 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
           />
 
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] z-50 max-h-[90%] flex flex-col"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 max-h-[90%] flex flex-col"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -153,7 +153,7 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-neutral-200" />
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
             {/* Header */}
@@ -168,7 +168,7 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60"
+                className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60 text-foreground"
               >
                 <X size={15} strokeWidth={2} />
               </button>
@@ -183,7 +183,7 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
                   {cities.map((city) => (
                     <span
                       key={city}
-                      className="flex items-center gap-1 bg-foreground text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                      className="flex items-center gap-1 bg-foreground text-background px-3 py-1.5 rounded-full text-sm font-medium"
                     >
                       {city}
                       <button
@@ -212,7 +212,7 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="absolute top-full mt-1 left-0 right-0 bg-white border border-border rounded-2xl shadow-md z-10 overflow-hidden"
+                        className="absolute top-full mt-1 left-0 right-0 bg-background border border-border rounded-2xl shadow-md z-10 overflow-hidden"
                       >
                         {suggestions.slice(0, 5).map((city) => (
                           <button
@@ -239,8 +239,8 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
                       onClick={() => setHousingType(value)}
                       className={`px-4 h-10 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
                         housingType === value
-                          ? 'bg-foreground text-white border-foreground'
-                          : 'bg-white text-foreground border-border'
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'bg-background text-foreground border-border'
                       }`}
                     >
                       {label}
@@ -287,8 +287,8 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
                       onClick={() => toggleRoom(r)}
                       className={`flex-1 h-11 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
                         rooms.includes(r)
-                          ? 'bg-foreground text-white border-foreground'
-                          : 'bg-white text-foreground border-border'
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'bg-background text-foreground border-border'
                       }`}
                     >
                       {r === 4 ? '4+' : r}
@@ -312,8 +312,8 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
                         }}
                         className={`px-3 h-9 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
                           active
-                            ? 'bg-foreground text-white border-foreground'
-                            : 'bg-white text-foreground border-border'
+                            ? 'bg-foreground text-background border-foreground'
+                            : 'bg-background text-foreground border-border'
                         }`}
                       >
                         {label}
@@ -354,11 +354,11 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
             </div>
 
             {/* CTA */}
-            <div className="px-5 pt-3 pb-8 flex-shrink-0 border-t border-border bg-white">
+            <div className="px-5 pt-3 pb-8 flex-shrink-0 border-t border-border bg-background">
               <button
                 onClick={handleSubmit}
                 disabled={cities.length === 0}
-                className="w-full h-14 bg-foreground text-white rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 disabled:opacity-40 active:scale-[0.98] transition-all"
+                className="w-full h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 disabled:opacity-40 active:scale-[0.98] transition-all"
               >
                 {isEditing ? (
                   <>

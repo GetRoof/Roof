@@ -1,23 +1,20 @@
 import { useState, useCallback } from 'react'
+import { storage } from '../lib/storage'
 
 const STORAGE_KEY = 'roof-onboarding-complete'
 
 export function useOnboarding() {
   const [showTour, setShowTour] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) !== 'true'
-    } catch {
-      return false
-    }
+    return storage.getItem(STORAGE_KEY) !== 'true'
   })
 
   const completeTour = useCallback(() => {
-    try { localStorage.setItem(STORAGE_KEY, 'true') } catch {}
+    storage.setItem(STORAGE_KEY, 'true')
     setShowTour(false)
   }, [])
 
   const skipTour = useCallback(() => {
-    try { localStorage.setItem(STORAGE_KEY, 'true') } catch {}
+    storage.setItem(STORAGE_KEY, 'true')
     setShowTour(false)
   }, [])
 

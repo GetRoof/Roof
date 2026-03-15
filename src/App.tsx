@@ -42,8 +42,8 @@ export default function App() {
     <OnboardingProvider>
       <SavedProvider>
         <NotificationsProvider>
-          <AlertsProvider>
           <ListingsProvider>
+          <AlertsProvider>
           <ViewedProvider>
           <BrowserRouter>
             <div className="phone-shell">
@@ -81,8 +81,8 @@ export default function App() {
             </div>
           </BrowserRouter>
           </ViewedProvider>
-          </ListingsProvider>
           </AlertsProvider>
+          </ListingsProvider>
         </NotificationsProvider>
       </SavedProvider>
     </OnboardingProvider>

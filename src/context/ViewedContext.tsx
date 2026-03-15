@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { storage } from '../lib/storage'
 
 interface ViewedContextType {
   viewedIds: Set<string>
@@ -10,7 +11,7 @@ const STORAGE_KEY = 'roof_viewed_listings'
 
 function loadFromStorage(): Set<string> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = storage.getItem(STORAGE_KEY)
     if (raw) return new Set(JSON.parse(raw) as string[])
   } catch { /* ignore */ }
   return new Set()
@@ -30,7 +31,7 @@ export function ViewedProvider({ children }: { children: ReactNode }) {
       if (prev.has(id)) return prev
       const next = new Set(prev)
       next.add(id)
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...next])) } catch { /* ignore */ }
+      storage.setItem(STORAGE_KEY, JSON.stringify([...next]))
       return next
     })
   }, [])

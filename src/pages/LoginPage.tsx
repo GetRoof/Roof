@@ -34,19 +34,19 @@ export default function LoginPage() {
 
   return (
     <motion.div
-      className="flex flex-col h-full bg-white px-5"
+      className="flex flex-col min-h-full bg-background px-5 overflow-y-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
     >
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center py-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="mb-8"
         >
-          <RoofLogo color="#0a0a0a" size={80} />
+          <RoofLogo className="text-foreground" size={80} />
         </motion.div>
 
         <motion.div

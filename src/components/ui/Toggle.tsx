@@ -14,7 +14,7 @@ export default function Toggle({ label, checked, onChange }: ToggleProps) {
       <div
         className={`
           relative w-12 h-7 rounded-full transition-colors duration-200 flex-shrink-0
-          ${checked ? 'bg-foreground' : 'bg-neutral-200'}
+          ${checked ? 'bg-foreground' : 'bg-neutral-300 dark:bg-neutral-600'}
         `}
       >
         <div

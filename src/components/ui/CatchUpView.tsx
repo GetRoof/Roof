@@ -13,16 +13,16 @@ import { useListings } from '../../context/ListingsContext'
 import { useSaved } from '../../context/SavedContext'
 
 const SOURCE_COLORS: Record<string, string> = {
-  Pararius: 'bg-blue-50 text-blue-700',
-  Kamernet: 'bg-red-50 text-red-700',
-  Huurwoningen: 'bg-emerald-50 text-emerald-700',
-  Funda: 'bg-orange-50 text-orange-700',
-  HousingAnywhere: 'bg-purple-50 text-purple-700',
-  DirectWonen: 'bg-cyan-50 text-cyan-700',
-  Rentola: 'bg-fuchsia-50 text-fuchsia-700',
-  'Kamer.nl': 'bg-amber-50 text-amber-700',
-  Huurstunt: 'bg-teal-50 text-teal-700',
-  '123Wonen': 'bg-indigo-50 text-indigo-700',
+  Pararius: 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300',
+  Kamernet: 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300',
+  Huurwoningen: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300',
+  Funda: 'bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300',
+  HousingAnywhere: 'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300',
+  DirectWonen: 'bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300',
+  Rentola: 'bg-fuchsia-50 dark:bg-fuchsia-950 text-fuchsia-700 dark:text-fuchsia-300',
+  'Kamer.nl': 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300',
+  Huurstunt: 'bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300',
+  '123Wonen': 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300',
 }
 
 const SWIPE_THRESHOLD = 80
@@ -87,14 +87,14 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, onPanEnd, onTap }: Card
       onPanEnd={isTop ? onPanEnd : undefined}
     >
       <div
-        className="w-full h-full bg-white rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col"
+        className="w-full h-full bg-background rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col"
         style={{ willChange: 'transform' }}
         onClick={() => {
           if (isTop && !hasDragged.current) onTap()
         }}
       >
         {/* Image */}
-        <div className="flex-1 relative bg-neutral-100 overflow-hidden min-h-0">
+        <div className="flex-1 relative bg-secondary overflow-hidden min-h-0">
           {listing.image ? (
             <img
               src={listing.image}
@@ -130,7 +130,7 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, onPanEnd, onTap }: Card
               className="absolute inset-0 bg-neutral-900/5 flex items-center justify-center pointer-events-none"
               style={{ opacity: skipOpacity }}
             >
-              <div className="bg-foreground text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 rotate-12 shadow-lg">
+              <div className="bg-foreground text-background px-5 py-2.5 rounded-2xl flex items-center gap-2 rotate-12 shadow-lg">
                 <SkipForward size={18} strokeWidth={2.5} />
                 <span className="text-base font-bold tracking-wide">SKIP</span>
               </div>
@@ -296,7 +296,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="absolute inset-0 bg-neutral-50 z-50 flex flex-col"
+          className="absolute inset-0 bg-background z-50 flex flex-col"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
@@ -306,7 +306,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
           <div className="flex items-center justify-between px-5 pt-14 pb-3 flex-shrink-0">
             <button
               onClick={onClose}
-              className="w-9 h-9 bg-white rounded-full flex items-center justify-center active:opacity-60 shadow-sm"
+              className="w-9 h-9 bg-background rounded-full flex items-center justify-center active:opacity-60 shadow-sm text-foreground"
             >
               <X size={16} strokeWidth={2} />
             </button>
@@ -332,7 +332,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
             <button
               onClick={handleUndo}
               disabled={history.length === 0}
-              className="w-9 h-9 bg-white rounded-full flex items-center justify-center active:opacity-60 shadow-sm disabled:opacity-30 transition-opacity"
+              className="w-9 h-9 bg-background rounded-full flex items-center justify-center active:opacity-60 shadow-sm disabled:opacity-30 transition-opacity text-foreground"
             >
               <Undo2 size={15} strokeWidth={2} />
             </button>
@@ -342,7 +342,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
           <div className="flex-1 px-5 pb-3 relative overflow-hidden">
             {newListings.length === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8">
-                <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm">
+                <div className="w-16 h-16 bg-background rounded-3xl flex items-center justify-center shadow-sm">
                   <Sparkles size={28} strokeWidth={1.5} className="text-muted" />
                 </div>
                 <h2 className="text-lg font-bold text-foreground">No new listings</h2>
@@ -351,7 +351,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
                 </p>
                 <button
                   onClick={onClose}
-                  className="mt-2 h-12 px-8 bg-foreground text-white rounded-full text-[15px] font-semibold active:scale-[0.98] transition-transform"
+                  className="mt-2 h-12 px-8 bg-foreground text-background rounded-full text-[15px] font-semibold active:scale-[0.98] transition-transform"
                 >
                   Go back
                 </button>
@@ -377,7 +377,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
                 </p>
                 <button
                   onClick={onClose}
-                  className="mt-4 h-12 px-8 bg-foreground text-white rounded-full text-[15px] font-semibold active:scale-[0.98] transition-transform"
+                  className="mt-4 h-12 px-8 bg-foreground text-background rounded-full text-[15px] font-semibold active:scale-[0.98] transition-transform"
                 >
                   Done
                 </button>
@@ -402,7 +402,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
             <div className="flex gap-4 px-5 pb-8 pt-2 flex-shrink-0">
               <button
                 onClick={() => commitSwipe('left')}
-                className="flex-1 h-14 bg-white rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm"
+                className="flex-1 h-14 bg-background rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm"
               >
                 <SkipForward size={16} strokeWidth={2} className="text-foreground" />
                 <span className="text-[15px] font-semibold text-foreground">Skip</span>
@@ -411,8 +411,8 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
                 onClick={() => commitSwipe('right')}
                 className="flex-1 h-14 bg-foreground rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
               >
-                <Bookmark size={16} strokeWidth={2} className="text-white" />
-                <span className="text-[15px] font-semibold text-white">Save</span>
+                <Bookmark size={16} strokeWidth={2} className="text-background" />
+                <span className="text-[15px] font-semibold text-background">Save</span>
               </button>
             </div>
           )}

@@ -51,8 +51,8 @@ export default function BudgetPage() {
               onClick={() => applyPreset(p)}
               className={`px-4 h-9 rounded-full text-sm font-medium border transition-all ${
                 activePreset === p
-                  ? 'bg-foreground text-white border-foreground'
-                  : 'bg-white text-foreground border-border'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-foreground border-border'
               }`}
             >
               {p.label}
@@ -67,7 +67,7 @@ export default function BudgetPage() {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-[15px]">€</span>
               <input
                 type="number"
-                className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+                className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
                 placeholder="0"
                 value={min}
                 onChange={(e) => setMin(e.target.value)}
@@ -81,7 +81,7 @@ export default function BudgetPage() {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-[15px]">€</span>
               <input
                 type="number"
-                className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+                className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
                 placeholder="No limit"
                 value={max}
                 onChange={(e) => setMax(e.target.value)}

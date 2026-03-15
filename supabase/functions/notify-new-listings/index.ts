@@ -85,10 +85,10 @@ function buildNotificationHtml(l: ListingEmail): string {
           </table>
         </td></tr>
         <tr><td style="padding:0 40px 32px;">
-          <a href="https://getroof.nl/app/rooms" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:100px;">View listing →</a>
+          <a href="https://getroof.app/app/rooms" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:100px;">View listing →</a>
         </td></tr>
         <tr><td style="padding:24px 40px;background-color:#fafafa;border-top:1px solid #f4f4f5;">
-          <p style="margin:0;font-size:12px;color:#a1a1aa;line-height:1.6;">You're receiving this because you have an active alert on Roof. <a href="https://getroof.nl/app/alerts" style="color:#52525b;">Manage alerts</a></p>
+          <p style="margin:0;font-size:12px;color:#a1a1aa;line-height:1.6;">You're receiving this because you have an active alert on Roof. <a href="https://getroof.app/app/alerts" style="color:#52525b;">Manage alerts</a></p>
         </td></tr>
       </table>
     </td></tr>

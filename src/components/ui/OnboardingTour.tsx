@@ -137,7 +137,7 @@ const OnboardingTour = memo(function OnboardingTour({ onComplete, onSkip }: Prop
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: current.position === 'bottom' ? -6 : 6 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="absolute w-[290px] bg-white rounded-2xl shadow-lg p-5 z-[10000]"
+          className="absolute w-[290px] bg-background rounded-2xl shadow-lg p-5 z-[10000]"
           style={tooltipStyle}
         >
           <p className="text-[15px] font-semibold text-foreground mb-1">{current.title}</p>
@@ -156,7 +156,7 @@ const OnboardingTour = memo(function OnboardingTour({ onComplete, onSkip }: Prop
               </button>
               <button
                 onClick={next}
-                className="px-4 h-8 bg-foreground text-white rounded-full text-sm font-medium active:opacity-80 transition-opacity"
+                className="px-4 h-8 bg-foreground text-background rounded-full text-sm font-medium active:opacity-80 transition-opacity"
               >
                 {step < STEPS.length - 1 ? 'Next' : 'Done'}
               </button>

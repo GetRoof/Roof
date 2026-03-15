@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-import { ALL_NEIGHBORHOODS } from '../../data/listings'
 
 export interface ActiveFilters {
+  priceMin: string
+  priceMax: string
   sizeMin: string
   sizeMax: string
   rooms: number[]       // empty = any; [4] means 4+
@@ -11,6 +12,8 @@ export interface ActiveFilters {
 }
 
 export const DEFAULT_FILTERS: ActiveFilters = {
+  priceMin: '',
+  priceMax: '',
   sizeMin: '',
   sizeMax: '',
   rooms: [],
@@ -20,6 +23,7 @@ export const DEFAULT_FILTERS: ActiveFilters = {
 
 export function countActiveFilters(f: ActiveFilters): number {
   let n = 0
+  if (f.priceMin || f.priceMax) n++
   if (f.sizeMin || f.sizeMax) n++
   if (f.rooms.length > 0) n++
   if (f.neighborhoods.length > 0) n++
@@ -30,6 +34,7 @@ export function countActiveFilters(f: ActiveFilters): number {
 interface Props {
   open: boolean
   filters: ActiveFilters
+  neighborhoods: string[]
   onChange: (f: ActiveFilters) => void
   onClose: () => void
   onReset: () => void
@@ -44,7 +49,7 @@ const FURNISHED_OPTIONS: { value: ActiveFilters['furnished']; label: string }[] 
   { value: 'upholstered', label: 'Upholstered' },
 ]
 
-export default function FiltersSheet({ open, filters, onChange, onClose, onReset }: Props) {
+export default function FiltersSheet({ open, filters, neighborhoods, onChange, onClose, onReset }: Props) {
   const toggleRoom = (r: number) => {
     onChange({
       ...filters,
@@ -80,7 +85,7 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
 
           {/* Sheet */}
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] z-50 max-h-[88%] flex flex-col"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 max-h-[88%] flex flex-col"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -88,7 +93,7 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-neutral-200" />
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
             {/* Header */}
@@ -96,7 +101,7 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
               <div className="flex items-center gap-2">
                 <h2 className="text-[17px] font-bold text-foreground">Filters</h2>
                 {activeCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-foreground text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">
                     {activeCount}
                   </span>
                 )}
@@ -112,7 +117,7 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
                 )}
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60"
+                  className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60 text-foreground"
                 >
                   <X size={15} strokeWidth={2} />
                 </button>
@@ -121,6 +126,66 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto scrollbar-hide">
+
+              {/* Price */}
+              <div className="px-5 py-5 border-b border-border">
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-4">Price (€/mo)</p>
+                {/* Presets */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[
+                    { label: '< €700', min: '', max: '700' },
+                    { label: '€700–1000', min: '700', max: '1000' },
+                    { label: '€1000–1500', min: '1000', max: '1500' },
+                    { label: '€1500–2000', min: '1500', max: '2000' },
+                    { label: '€2000+', min: '2000', max: '' },
+                  ].map(({ label, min, max }) => {
+                    const active = filters.priceMin === min && filters.priceMax === max
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => onChange({ ...filters, priceMin: active ? '' : min, priceMax: active ? '' : max })}
+                        className={`px-3 h-9 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
+                          active
+                            ? 'bg-foreground text-background border-foreground'
+                            : 'bg-background text-foreground border-border'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Custom inputs */}
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block text-xs text-muted mb-1.5">Min</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted">€</span>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={filters.priceMin}
+                        onChange={(e) => onChange({ ...filters, priceMin: e.target.value })}
+                        className="w-full h-12 pl-7 pr-3 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-end pb-0.5 text-muted">—</div>
+                  <div className="flex-1">
+                    <label className="block text-xs text-muted mb-1.5">Max</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted">€</span>
+                      <input
+                        type="number"
+                        placeholder="∞"
+                        value={filters.priceMax}
+                        onChange={(e) => onChange({ ...filters, priceMax: e.target.value })}
+                        className="w-full h-12 pl-7 pr-3 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Size */}
               <div className="px-5 py-5 border-b border-border">
@@ -141,8 +206,8 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
                         onClick={() => onChange({ ...filters, sizeMin: active ? '' : min, sizeMax: active ? '' : max })}
                         className={`px-3 h-9 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
                           active
-                            ? 'bg-foreground text-white border-foreground'
-                            : 'bg-white text-foreground border-border'
+                            ? 'bg-foreground text-background border-foreground'
+                            : 'bg-background text-foreground border-border'
                         }`}
                       >
                         {label}
@@ -160,7 +225,7 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
                         placeholder="0"
                         value={filters.sizeMin}
                         onChange={(e) => onChange({ ...filters, sizeMin: e.target.value })}
-                        className="w-full h-12 px-3 pr-8 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+                        className="w-full h-12 px-3 pr-8 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">m²</span>
                     </div>
@@ -174,7 +239,7 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
                         placeholder="∞"
                         value={filters.sizeMax}
                         onChange={(e) => onChange({ ...filters, sizeMax: e.target.value })}
-                        className="w-full h-12 px-3 pr-8 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+                        className="w-full h-12 px-3 pr-8 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">m²</span>
                     </div>
@@ -192,8 +257,8 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
                       onClick={() => toggleRoom(r)}
                       className={`flex-1 h-11 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
                         filters.rooms.includes(r)
-                          ? 'bg-foreground text-white border-foreground'
-                          : 'bg-white text-foreground border-border'
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'bg-background text-foreground border-border'
                       }`}
                     >
                       {r === 4 ? '4+' : r}
@@ -212,8 +277,8 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
                       onClick={() => onChange({ ...filters, furnished: value })}
                       className={`px-4 h-10 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
                         filters.furnished === value
-                          ? 'bg-foreground text-white border-foreground'
-                          : 'bg-white text-foreground border-border'
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'bg-background text-foreground border-border'
                       }`}
                     >
                       {label}
@@ -226,14 +291,14 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
               <div className="px-5 py-5 pb-8">
                 <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-4">Neighborhood</p>
                 <div className="flex flex-wrap gap-2">
-                  {ALL_NEIGHBORHOODS.map((n) => (
+                  {neighborhoods.map((n) => (
                     <button
                       key={n}
                       onClick={() => toggleNeighborhood(n)}
                       className={`px-3 h-9 rounded-full text-sm font-medium border transition-all active:scale-[0.98] ${
                         filters.neighborhoods.includes(n)
-                          ? 'bg-foreground text-white border-foreground'
-                          : 'bg-white text-foreground border-border'
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'bg-background text-foreground border-border'
                       }`}
                     >
                       {n}
@@ -244,10 +309,10 @@ export default function FiltersSheet({ open, filters, onChange, onClose, onReset
             </div>
 
             {/* Apply button */}
-            <div className="px-5 pt-3 pb-6 flex-shrink-0 border-t border-border bg-white">
+            <div className="px-5 pt-3 pb-6 flex-shrink-0 border-t border-border bg-background">
               <button
                 onClick={onClose}
-                className="w-full h-14 bg-foreground text-white rounded-2xl text-[15px] font-semibold active:scale-[0.98] active:bg-neutral-800 transition-all"
+                className="w-full h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold active:scale-[0.98] active:opacity-80 transition-all"
               >
                 {activeCount > 0 ? `Apply ${activeCount} filter${activeCount !== 1 ? 's' : ''}` : 'Apply filters'}
               </button>

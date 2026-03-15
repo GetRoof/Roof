@@ -120,12 +120,12 @@ export default function PreferencesPage() {
   const canSave = cities.length > 0 && (openToAnything || housingType)
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="flex-shrink-0 px-5 pt-14 pb-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="active:opacity-60">
-            <ChevronLeft size={22} strokeWidth={2} />
+            <ChevronLeft size={22} strokeWidth={2} className="text-foreground" />
           </button>
           <h1 className="text-xl font-bold text-foreground">Search preferences</h1>
         </div>
@@ -145,7 +145,7 @@ export default function PreferencesPage() {
           <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Cities</p>
           <div className="relative mb-3">
             <input
-              className="w-full h-14 px-4 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+              className="w-full h-14 px-4 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value)
@@ -156,7 +156,7 @@ export default function PreferencesPage() {
               placeholder="Search and add a city"
             />
             {showDropdown && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-xs z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-xs z-10 overflow-hidden">
                 {suggestions.map((c) => (
                   <button
                     key={c}
@@ -172,7 +172,7 @@ export default function PreferencesPage() {
           {cities.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {cities.map((c) => (
-                <div key={c} className="inline-flex items-center gap-2 bg-foreground text-white px-3 py-1.5 rounded-full text-sm font-medium">
+                <div key={c} className="inline-flex items-center gap-2 bg-foreground text-background px-3 py-1.5 rounded-full text-sm font-medium">
                   📍 {c}
                   <button
                     onClick={() => removeCity(c)}
@@ -209,9 +209,9 @@ export default function PreferencesPage() {
                 >
                   <span className="text-[15px] text-foreground">{t.label}</span>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                    housingType === t.id ? 'border-foreground bg-foreground' : 'border-neutral-300'
+                    housingType === t.id ? 'border-foreground bg-foreground' : 'border-border'
                   }`}>
-                    {housingType === t.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                    {housingType === t.id && <div className="w-2 h-2 rounded-full bg-background" />}
                   </div>
                 </button>
               ))}
@@ -229,7 +229,7 @@ export default function PreferencesPage() {
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-[15px]">€</span>
                 <input
                   type="number"
-                  className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+                  className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
                   placeholder="600"
                   value={min}
                   onChange={(e) => setMin(e.target.value)}
@@ -242,7 +242,7 @@ export default function PreferencesPage() {
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-[15px]">€</span>
                 <input
                   type="number"
-                  className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-white focus:border-foreground transition-colors"
+                  className="w-full h-14 pl-8 pr-4 rounded-xl border border-border text-foreground text-[15px] bg-background focus:border-foreground transition-colors"
                   placeholder="1200"
                   value={max}
                   onChange={(e) => setMax(e.target.value)}

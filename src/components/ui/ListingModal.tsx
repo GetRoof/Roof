@@ -90,7 +90,7 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
 
           {/* Sheet */}
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] z-50 max-h-[92%] flex flex-col overflow-hidden"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 max-h-[92%] flex flex-col overflow-hidden"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -101,7 +101,7 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
               <ImageGallery images={listing.images} alt={listing.title} />
               <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
               <div className="absolute top-3 inset-x-0 flex justify-center pointer-events-none">
-                <div className="w-10 h-1 rounded-full bg-white/60" />
+                <div className="w-10 h-1 rounded-full bg-background/60" />
               </div>
               <button
                 onClick={onClose}
@@ -155,12 +155,12 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
             </div>
 
             {/* Pinned intro + actions */}
-            <div className="flex-shrink-0 border-t border-border bg-white">
+            <div className="flex-shrink-0 border-t border-border bg-background">
               {/* Editable intro */}
               <div className="px-5 pt-4 pb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-5 h-5 bg-foreground rounded-md flex items-center justify-center flex-shrink-0">
-                    <Sparkles size={11} className="text-white" />
+                    <Sparkles size={11} className="text-background" />
                   </div>
                   <p className="text-[13px] font-semibold text-foreground">Intro message</p>
                   <p className="text-[11px] text-muted ml-auto">Tap to edit</p>
@@ -210,7 +210,7 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
                   href={listing.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 h-14 bg-foreground text-white rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                  className="flex-1 h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                 >
                   Go to listing
                   <ExternalLink size={15} />

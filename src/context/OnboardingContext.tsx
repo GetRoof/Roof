@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
+import { storage } from '../lib/storage'
+
+const STORAGE_KEY = 'roof-onboarding-data'
 
 interface OnboardingData {
   name: string
@@ -25,11 +28,23 @@ const OnboardingContext = createContext<OnboardingContextType>({
   setData: () => {},
 })
 
+function loadData(): Partial<OnboardingData> {
+  try {
+    const raw = storage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw) as Partial<OnboardingData>
+  } catch {}
+  return {}
+}
+
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const [data, setDataState] = useState<Partial<OnboardingData>>({})
+  const [data, setDataState] = useState<Partial<OnboardingData>>(loadData)
 
   const setData = (updates: Partial<OnboardingData>) => {
-    setDataState((prev) => ({ ...prev, ...updates }))
+    setDataState((prev) => {
+      const next = { ...prev, ...updates }
+      storage.setItem(STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
   }
 
   return (

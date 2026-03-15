@@ -45,7 +45,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.hugovinicius.roof</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.hugovinicius.roof</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

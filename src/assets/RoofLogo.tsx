@@ -4,7 +4,7 @@ interface RoofLogoProps {
   size?: number
 }
 
-export default function RoofLogo({ color = '#000', className = '', size = 160 }: RoofLogoProps) {
+export default function RoofLogo({ color = 'currentColor', className = '', size = 160 }: RoofLogoProps) {
   const height = size * (140 / 272)
   return (
     <svg

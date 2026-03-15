@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import RoofLogo from '../assets/RoofLogo'
+import { supabase } from '../lib/supabase'
 
 const LOGO_SIZE = 160
 const LOGO_HEIGHT = Math.round(LOGO_SIZE * (140 / 272))
@@ -10,7 +11,12 @@ export default function SplashPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const timer = setTimeout(() => navigate('/welcome'), 2800)
+    const check = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      navigate(session ? '/app/rooms' : '/welcome', { replace: true })
+    }
+
+    const timer = setTimeout(check, 2800)
     return () => clearTimeout(timer)
   }, [navigate])
 

@@ -5,11 +5,11 @@ export default function TermsPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-background">
       <div className="flex-shrink-0 px-5 pt-14 pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="active:opacity-60">
-            <ChevronLeft size={22} strokeWidth={2} />
+            <ChevronLeft size={22} strokeWidth={2} className="text-foreground" />
           </button>
           <h1 className="text-xl font-bold text-foreground">Terms of Service</h1>
         </div>

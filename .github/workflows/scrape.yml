@@ -1,0 +1,46 @@
+name: Scheduled Scrape
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Scrape Amsterdam
+        continue-on-error: true
+        run: node scripts/scrape-all.js --city Amsterdam --max 2000
+
+      - name: Scrape Rotterdam
+        continue-on-error: true
+        run: node scripts/scrape-all.js --city Rotterdam --max 2000
+
+      - name: Scrape Utrecht
+        continue-on-error: true
+        run: node scripts/scrape-all.js --city Utrecht --max 2000
+
+      - name: Scrape Den Haag
+        continue-on-error: true
+        run: node scripts/scrape-all.js --city "Den Haag" --max 2000

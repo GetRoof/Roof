@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
+import { storage } from '../lib/storage'
 
 interface NotificationsState {
   instantAlerts: boolean
@@ -32,7 +33,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // Load initial state from localStorage
   const [prefs, setPrefs] = useState<NotificationsState>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = storage.getItem(STORAGE_KEY)
       return stored ? { ...DEFAULT_PREFS, ...JSON.parse(stored) } : DEFAULT_PREFS
     } catch {
       return DEFAULT_PREFS
@@ -41,7 +42,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   // Persist to localStorage whenever prefs change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
+    storage.setItem(STORAGE_KEY, JSON.stringify(prefs))
   }, [prefs])
 
   // Sync prefs to Supabase profile (optional column)

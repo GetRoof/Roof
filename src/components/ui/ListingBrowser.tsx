@@ -111,19 +111,19 @@ export default function ListingBrowser({ listing, onClose }: Props) {
     <AnimatePresence>
       {listing && (
         <motion.div
-          className="absolute inset-0 z-50 flex flex-col bg-white"
+          className="absolute inset-0 z-50 flex flex-col bg-background"
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 32, stiffness: 300 }}
         >
           {/* Browser chrome */}
-          <div className="flex-shrink-0 pt-12 pb-2 px-3 bg-white border-b border-border">
+          <div className="flex-shrink-0 pt-12 pb-2 px-3 bg-background border-b border-border">
             <div className="flex items-center gap-2">
               {/* Close */}
               <button
                 onClick={onClose}
-                className="w-9 h-9 flex items-center justify-center rounded-full active:bg-secondary transition-colors flex-shrink-0"
+                className="w-9 h-9 flex items-center justify-center rounded-full active:bg-secondary transition-colors flex-shrink-0 text-foreground"
               >
                 <X size={17} strokeWidth={2} />
               </button>
@@ -137,7 +137,7 @@ export default function ListingBrowser({ listing, onClose }: Props) {
               {/* Reload */}
               <button
                 onClick={reload}
-                className="w-9 h-9 flex items-center justify-center rounded-full active:bg-secondary transition-colors flex-shrink-0"
+                className="w-9 h-9 flex items-center justify-center rounded-full active:bg-secondary transition-colors flex-shrink-0 text-foreground"
               >
                 <RefreshCw size={15} strokeWidth={1.8} className={iframeStatus === 'loading' ? 'animate-spin text-muted' : 'text-foreground'} />
               </button>
@@ -147,7 +147,7 @@ export default function ListingBrowser({ listing, onClose }: Props) {
                 href={listing.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full active:bg-secondary transition-colors flex-shrink-0"
+                className="w-9 h-9 flex items-center justify-center rounded-full active:bg-secondary transition-colors flex-shrink-0 text-foreground"
               >
                 <ExternalLink size={15} strokeWidth={1.8} />
               </a>
@@ -155,14 +155,14 @@ export default function ListingBrowser({ listing, onClose }: Props) {
           </div>
 
           {/* AI intro card */}
-          <div className="flex-shrink-0 border-b border-border bg-white">
+          <div className="flex-shrink-0 border-b border-border bg-background">
             <button
               onClick={() => setIntroOpen((v) => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 active:bg-neutral-50 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 active:bg-secondary transition-colors"
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-6 bg-foreground rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Sparkles size={12} className="text-white" />
+                  <Sparkles size={12} className="text-background" />
                 </div>
                 <span className="text-[13px] font-semibold text-foreground">
                   {introOpen ? 'AI-generated intro' : 'AI intro ready · tap to expand'}
@@ -193,12 +193,12 @@ export default function ListingBrowser({ listing, onClose }: Props) {
                         className={`mt-3 flex items-center gap-2 px-4 h-9 rounded-xl text-[13px] font-semibold transition-all active:scale-95 ${
                           copied
                             ? 'bg-green-500 text-white'
-                            : 'bg-foreground text-white active:opacity-80'
+                            : 'bg-foreground text-background active:opacity-80'
                         }`}
                       >
                         {copied ? (
                           <>
-                            <Check size={13} strokeWidth={2.5} />
+                            <Check size={13} strokeWidth={2.5} className="text-background" />
                             Copied!
                           </>
                         ) : (
@@ -221,11 +221,11 @@ export default function ListingBrowser({ listing, onClose }: Props) {
             <AnimatePresence>
               {iframeStatus === 'loading' && (
                 <motion.div
-                  className="absolute inset-0 z-10 bg-white flex flex-col items-center justify-center gap-3"
+                  className="absolute inset-0 z-10 bg-background flex flex-col items-center justify-center gap-3"
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-10 h-10 border-2 border-neutral-200 border-t-foreground rounded-full animate-spin" />
+                  <div className="w-10 h-10 border-2 border-border border-t-foreground rounded-full animate-spin" />
                   <p className="text-sm text-muted">Loading {domain}…</p>
                 </motion.div>
               )}
@@ -235,7 +235,7 @@ export default function ListingBrowser({ listing, onClose }: Props) {
             <AnimatePresence>
               {iframeStatus === 'blocked' && (
                 <motion.div
-                  className="absolute inset-0 z-10 bg-white flex flex-col items-center justify-center gap-4 px-8 text-center"
+                  className="absolute inset-0 z-10 bg-background flex flex-col items-center justify-center gap-4 px-8 text-center"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.25 }}
@@ -253,7 +253,7 @@ export default function ListingBrowser({ listing, onClose }: Props) {
                     href={listing.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 h-11 bg-foreground text-white rounded-full text-sm font-semibold active:opacity-80 transition-opacity"
+                    className="flex items-center gap-2 px-6 h-11 bg-foreground text-background rounded-full text-sm font-semibold active:opacity-80 transition-opacity"
                   >
                     Open in browser
                     <ExternalLink size={14} />

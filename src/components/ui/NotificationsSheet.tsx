@@ -5,16 +5,16 @@ import { useListings } from '../../context/ListingsContext'
 import { Listing } from '../../data/listings'
 
 const SOURCE_COLORS: Record<string, string> = {
-  Pararius: 'bg-blue-50 text-blue-700',
-  Kamernet: 'bg-red-50 text-red-700',
-  Huurwoningen: 'bg-emerald-50 text-emerald-700',
-  Funda: 'bg-orange-50 text-orange-700',
-  HousingAnywhere: 'bg-purple-50 text-purple-700',
-  DirectWonen: 'bg-cyan-50 text-cyan-700',
-  Rentola: 'bg-fuchsia-50 text-fuchsia-700',
-  'Kamer.nl': 'bg-amber-50 text-amber-700',
-  Huurstunt: 'bg-teal-50 text-teal-700',
-  '123Wonen': 'bg-indigo-50 text-indigo-700',
+  Pararius: 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300',
+  Kamernet: 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300',
+  Huurwoningen: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300',
+  Funda: 'bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300',
+  HousingAnywhere: 'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300',
+  DirectWonen: 'bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300',
+  Rentola: 'bg-fuchsia-50 dark:bg-fuchsia-950 text-fuchsia-700 dark:text-fuchsia-300',
+  'Kamer.nl': 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300',
+  Huurstunt: 'bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300',
+  '123Wonen': 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300',
 }
 
 interface Props {
@@ -40,7 +40,7 @@ export default function NotificationsSheet({ open, onClose, onOpenListing }: Pro
           />
 
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] z-50 max-h-[88%] flex flex-col"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 max-h-[88%] flex flex-col"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -48,7 +48,7 @@ export default function NotificationsSheet({ open, onClose, onOpenListing }: Pro
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-neutral-200" />
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
             {/* Header */}
@@ -56,14 +56,14 @@ export default function NotificationsSheet({ open, onClose, onOpenListing }: Pro
               <div className="flex items-center gap-2">
                 <h2 className="text-[17px] font-bold text-foreground">Notifications</h2>
                 {newListings.length > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-foreground text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">
                     {newListings.length > 9 ? '9+' : newListings.length}
                   </span>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60"
+                className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center active:opacity-60 text-foreground"
               >
                 <X size={15} strokeWidth={2} />
               </button>
@@ -100,7 +100,7 @@ export default function NotificationsSheet({ open, onClose, onOpenListing }: Pro
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                           />
                         ) : (
-                          <div className="w-full h-full bg-neutral-200" />
+                          <div className="w-full h-full bg-border" />
                         )}
                       </div>
 

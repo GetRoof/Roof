@@ -1,7 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
+import { Preferences } from '@capacitor/preferences'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+
+/**
+ * Custom storage adapter using Capacitor Preferences (iOS Keychain /
+ * Android SharedPreferences). Survives the app being killed — just like
+ * Instagram / X — unlike localStorage which iOS can wipe.
+ */
+const capacitorStorage = {
+  getItem: async (key: string) => {
+    const { value } = await Preferences.get({ key })
+    return value
+  },
+  setItem: async (key: string, value: string) => {
+    await Preferences.set({ key, value })
+  },
+  removeItem: async (key: string) => {
+    await Preferences.remove({ key })
+  },
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -9,6 +28,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'roof-auth',
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: capacitorStorage,
   },
 })
 

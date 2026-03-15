@@ -58,7 +58,7 @@ export default function CommunityPage() {
 
   return (
     <motion.div
-      className="flex flex-col h-full bg-white px-5"
+      className="flex flex-col h-full bg-background px-5"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
@@ -72,7 +72,7 @@ export default function CommunityPage() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Search size={28} strokeWidth={1.8} className="text-white" />
+          <Search size={28} strokeWidth={1.8} className="text-background" />
         </motion.div>
 
         <motion.div
@@ -136,11 +136,11 @@ export default function CommunityPage() {
           transition={{ delay: 0.55 }}
         >
           <div className="flex items-center gap-2 text-sm text-muted">
-            <Bell size={14} strokeWidth={1.8} />
+            <Bell size={14} strokeWidth={1.8} className="text-foreground" />
             Instant push alerts
           </div>
           <div className="flex items-center gap-2 text-sm text-muted">
-            <Zap size={14} strokeWidth={1.8} />
+            <Zap size={14} strokeWidth={1.8} className="text-foreground" />
             Updated daily
           </div>
         </motion.div>

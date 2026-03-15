@@ -19,7 +19,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`
             w-full h-14 px-4 rounded-xl border text-foreground text-[15px]
             placeholder:text-neutral-400
-            bg-white border-border
+            bg-background border-border
             focus:border-foreground transition-colors duration-150
             ${error ? 'border-red-400' : ''}
             ${className}

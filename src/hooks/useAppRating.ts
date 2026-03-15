@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useSaved } from '../context/SavedContext'
+import { storage } from '../lib/storage'
 
 const RATING_KEY = 'roof-rating-prompted'
 const SAVE_THRESHOLD = 5
@@ -9,9 +10,9 @@ export function useAppRating() {
 
   useEffect(() => {
     if (savedIds.size < SAVE_THRESHOLD) return
-    if (localStorage.getItem(RATING_KEY)) return
+    if (storage.getItem(RATING_KEY)) return
 
-    localStorage.setItem(RATING_KEY, 'true')
+    storage.setItem(RATING_KEY, 'true')
 
     // Use a short delay so it doesn't interrupt the save action
     const timer = setTimeout(() => {

@@ -16,7 +16,7 @@ export default function CheckOption({ label, description, selected, onToggle }: 
           mt-0.5 w-5 h-5 rounded flex-shrink-0 border-2 transition-all duration-150 flex items-center justify-center
           ${selected
             ? 'border-foreground bg-foreground'
-            : 'border-neutral-300 bg-white'
+            : 'border-border bg-background'
           }
         `}
       >

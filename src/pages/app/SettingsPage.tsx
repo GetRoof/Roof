@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const { prefs, setPref } = useNotifications()
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-background">
       {/* Header — left-aligned, no back button (tab bar page) */}
       <div className="flex-shrink-0 px-5 pt-14 pb-4 border-b border-border">
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
@@ -24,13 +24,13 @@ export default function SettingsPage() {
         {/* Notifications section */}
         <div className="px-5 py-5">
           <div className="flex items-center gap-2 mb-4">
-            <Bell size={16} strokeWidth={1.8} />
+            <Bell size={16} strokeWidth={1.8} className="text-foreground" />
             <h2 className="text-[15px] font-semibold text-foreground">Notifications</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
-                <Zap size={16} strokeWidth={1.8} />
+                <Zap size={16} strokeWidth={1.8} className="text-foreground" />
               </div>
               <div className="flex-1">
                 <Toggle label="Instant alerts" checked={prefs.instantAlerts} onChange={(v) => setPref('instantAlerts', v)} />
@@ -39,7 +39,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
-                <Mail size={16} strokeWidth={1.8} />
+                <Mail size={16} strokeWidth={1.8} className="text-foreground" />
               </div>
               <div className="flex-1">
                 <Toggle label="Email alerts" checked={prefs.emailAlerts} onChange={(v) => setPref('emailAlerts', v)} />
@@ -48,7 +48,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
-                <Clock size={16} strokeWidth={1.8} />
+                <Clock size={16} strokeWidth={1.8} className="text-foreground" />
               </div>
               <div className="flex-1">
                 <Toggle label="Daily digest" checked={prefs.dailyDigest} onChange={(v) => setPref('dailyDigest', v)} />
