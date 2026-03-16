@@ -163,8 +163,9 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
   >([])
   const isAnimating = useRef(false)
 
-  const topX = useMotionValue(0)
-  const exitX = useMotionValue(0)
+  const topX    = useMotionValue(0)
+  const exitX   = useMotionValue(0)
+  const peekX   = useMotionValue(0)   // stable MV for the non-interactive peek card
   const [exitingListing, setExitingListing] = useState<Listing | null>(null)
 
   useEffect(() => {
@@ -341,7 +342,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
                     key={`peek-${nextCard.id}`}
                     listing={nextCard}
                     isTop={false}
-                    driveX={useMotionValue(0)}
+                    driveX={peekX}
                     isSaved={isSaved(nextCard.id)}
                     onToggleSave={() => {}}
                     onTap={() => {}}
