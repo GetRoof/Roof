@@ -123,9 +123,13 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, radius, onPanEnd, onTap
       }
       transition={
         isTop
-          // New top card: spring y + scale into place (x is driven by topX MotionValue)
-          ? SPRING_ENTER
-          // Background cards: fluid arc repositioning
+          ? {
+              // x and rotate are driven by MotionValues (topX / dragRotate) — instant
+              // y must also reset instantly to avoid axis-mismatch flicker
+              // Only scale springs: gives the "step forward" pop without any glitch
+              scale:   SPRING_ENTER,
+              default: { duration: 0 },
+            }
           : SPRING_ARC
       }
       onPanStart={isTop ? () => { hasDragged.current = false } : undefined}
