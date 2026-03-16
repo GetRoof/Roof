@@ -171,8 +171,8 @@ async function sendApnsPush(
   const jwt = await generateApnsJwt(keyId, teamId, privateKey)
   const results: PushResult[] = []
 
-  // Use sandbox for development builds, production for release
-  const useSandbox = Deno.env.get('APNS_SANDBOX') !== 'false'
+  // Use production APNs (works for TestFlight + App Store builds)
+  const useSandbox = Deno.env.get('APNS_SANDBOX') === 'true'
   const apnsHost = useSandbox
     ? 'https://api.sandbox.push.apple.com'
     : 'https://api.push.apple.com'
