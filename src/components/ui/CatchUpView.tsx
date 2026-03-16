@@ -27,8 +27,20 @@ const SOURCE_COLORS: Record<string, string> = {
 }
 
 // ─── Swipe constants ─────────────────────────────────────────────────────────
-const SWIPE_THRESHOLD  = 80
+const SWIPE_THRESHOLD    = 80
 const VELOCITY_THRESHOLD = 400
+
+// ─── Spring presets ───────────────────────────────────────────────────────────
+// Exit throw — fast, decisive, no overshoot. velocity injected at call-time.
+const SPRING_EXIT    = { type: 'spring' as const, stiffness: 160, damping: 20, mass: 0.75 }
+// Snap-back when card is released below threshold — soft, natural bounce
+const SPRING_RETURN  = { type: 'spring' as const, stiffness: 320, damping: 26, mass: 0.9 }
+// Background cards repositioning after a commit — smooth, weighted
+const SPRING_ARC     = { type: 'spring' as const, stiffness: 210, damping: 22, mass: 1.1 }
+// New top card springing into place (y + scale only — x is driven by topX MotionValue)
+const SPRING_ENTER   = { type: 'spring' as const, stiffness: 380, damping: 30, mass: 0.85 }
+// Undo card flying back in
+const SPRING_UNDO    = { type: 'spring' as const, stiffness: 260, damping: 26, mass: 0.9 }
 
 // ─── Arc fan math ─────────────────────────────────────────────────────────────
 // Cards fan to the right along a circular arc.
@@ -90,18 +102,18 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, radius, onPanEnd, onTap
       style={
         isTop
           ? {
-              // Top card: only topX / dragRotate drive position — arc is identity (0,0)
               x: topX,
               rotate: dragRotate,
               zIndex: 10,
               touchAction: 'none',
-              // Card geometry
-              width:      '84%',
-              left:       '8%',
-              top:        '4%',
-              bottom:     '4%',
+              willChange: 'transform',
+              width: '84%', left: '8%', top: '4%', bottom: '4%',
             }
-          : { zIndex: 10 - stackIndex, width: '84%', left: '8%', top: '4%', bottom: '4%' }
+          : {
+              zIndex: 10 - stackIndex,
+              willChange: 'transform',
+              width: '84%', left: '8%', top: '4%', bottom: '4%',
+            }
       }
       initial={false}
       animate={
@@ -111,8 +123,10 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, radius, onPanEnd, onTap
       }
       transition={
         isTop
-          ? { duration: 0 }          // instant reset when a new card takes the top spot
-          : { type: 'spring', stiffness: 260, damping: 26 }
+          // New top card: spring y + scale into place (x is driven by topX MotionValue)
+          ? SPRING_ENTER
+          // Background cards: fluid arc repositioning
+          : SPRING_ARC
       }
       onPanStart={isTop ? () => { hasDragged.current = false } : undefined}
       onPan={
@@ -133,7 +147,6 @@ function CatchUpCard({ listing, isTop, stackIndex, topX, radius, onPanEnd, onTap
           boxShadow: isTop
             ? '0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08)'
             : '0 12px 40px rgba(0,0,0,0.12)',
-          willChange: 'transform',
         }}
         onClick={() => { if (isTop && !hasDragged.current) onTap() }}
       >
@@ -301,8 +314,9 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
   const remaining = Math.max(newListings.length - currentIndex, 0)
   const visibleCards = newListings.slice(currentIndex, currentIndex + 4)
 
+  // throwVelocity: actual px/s from the drag gesture — makes fast flicks exit faster
   const commitSwipe = useCallback(
-    (direction: 'left' | 'right') => {
+    (direction: 'left' | 'right', throwVelocity = 0) => {
       if (isAnimating.current || isDone) return
       isAnimating.current = true
 
@@ -312,9 +326,11 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
       if (direction === 'right' && !isSaved(listing.id)) toggleSave(listing.id)
 
       const dir = direction === 'right' ? 1 : -1
-      animate(topX, dir * 500, {
-        duration: 0.25,
-        ease: 'easeOut',
+      animate(topX, dir * 600, {
+        ...SPRING_EXIT,
+        // Inject the finger's throw velocity so fast flicks feel instant,
+        // slow threshold-crossings feel deliberate
+        velocity: throwVelocity * dir,
         onComplete: () => {
           setHistory((prev) => [
             ...prev,
@@ -336,9 +352,11 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
         Math.abs(info.offset.x) > SWIPE_THRESHOLD ||
         Math.abs(info.velocity.x) > VELOCITY_THRESHOLD
       if (shouldSwipe) {
-        commitSwipe(info.offset.x > 0 ? 'right' : 'left')
+        // Pass the actual drag velocity so the spring can honour the throw
+        commitSwipe(info.offset.x > 0 ? 'right' : 'left', info.velocity.x)
       } else {
-        animate(topX, 0, { type: 'spring', stiffness: 500, damping: 35 })
+        // Released without intent to swipe — spring back gently
+        animate(topX, 0, SPRING_RETURN)
       }
     },
     [commitSwipe, topX],
@@ -352,11 +370,9 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
     setCurrentIndex(last.index)
     setHistory((prev) => prev.slice(0, -1))
     const dir = last.action === 'save' ? 1 : -1
-    topX.set(dir * 500)
+    topX.set(dir * 600)
     animate(topX, 0, {
-      type: 'spring',
-      stiffness: 300,
-      damping: 30,
+      ...SPRING_UNDO,
       onComplete: () => { isAnimating.current = false },
     })
   }, [history, isSaved, toggleSave, topX])
