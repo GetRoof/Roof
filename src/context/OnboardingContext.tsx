@@ -5,6 +5,7 @@ const STORAGE_KEY = 'roof-onboarding-data'
 
 interface OnboardingData {
   name: string
+  gender: 'male' | 'female' | 'other'
   purposes: string[]
   housingType: string
   country: string

@@ -1,6 +1,6 @@
-import { useCallback } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, ChevronDown } from 'lucide-react'
 
 export interface ActiveFilters {
   priceMin: string
@@ -99,11 +99,6 @@ const CURATED_NEIGHBORHOODS: Record<string, { name: string; emoji: string }[]> =
   ],
 }
 
-const PRICE_MAX = 4000
-const PRICE_STEP = 50
-const SIZE_MAX = 200
-const SIZE_STEP = 5
-
 const FURNISHED_OPTIONS: { value: ActiveFilters['furnished']; label: string; desc: string }[] = [
   { value: 'all',          label: 'Any',          desc: 'Show all options'    },
   { value: 'furnished',    label: 'Furnished',    desc: 'Furniture included'  },
@@ -111,77 +106,166 @@ const FURNISHED_OPTIONS: { value: ActiveFilters['furnished']; label: string; des
   { value: 'upholstered',  label: 'Upholstered',  desc: 'Shell + basic items' },
 ]
 
-// ─── Dual range slider component ──────────────────────────────────────────────
-function DualRangeSlider({
-  min, max, step,
-  valueMin, valueMax,
-  onChangeMin, onChangeMax,
-  formatMin, formatMax,
+const PRICE_PRESETS = [
+  { label: 'Under €700',     min: '',    max: '700'  },
+  { label: '€700 – €1,200',  min: '700', max: '1200' },
+  { label: '€1,200 – €1,800',min: '1200',max: '1800' },
+  { label: '€1,800 – €2,500',min: '1800',max: '2500' },
+  { label: '€2,500+',        min: '2500',max: ''     },
+]
+
+const SIZE_PRESETS = [
+  { label: 'Studio',   sublabel: '< 20 m²',    min: '',   max: '20'  },
+  { label: 'Cozy',     sublabel: '20 – 40 m²', min: '20', max: '40'  },
+  { label: 'Standard', sublabel: '40 – 60 m²', min: '40', max: '60'  },
+  { label: 'Spacious', sublabel: '60 – 80 m²', min: '60', max: '80'  },
+  { label: 'Large',    sublabel: '80 m²+',      min: '80', max: ''    },
+]
+
+// ─── Range preset selector ─────────────────────────────────────────────────────
+function RangeSection({
+  title, subtitle, presets, currentMin, currentMax,
+  onSelect, inputPrefix, inputSuffix,
 }: {
-  min: number; max: number; step: number
-  valueMin: number; valueMax: number
-  onChangeMin: (v: number) => void
-  onChangeMax: (v: number) => void
-  formatMin: (v: number) => string
-  formatMax: (v: number) => string
+  title: string
+  subtitle: string
+  presets: { label: string; sublabel?: string; min: string; max: string }[]
+  currentMin: string; currentMax: string
+  onSelect: (min: string, max: string) => void
+  inputPrefix?: string
+  inputSuffix?: string
 }) {
-  const minPct = ((valueMin - min) / (max - min)) * 100
-  const maxPct = ((valueMax - min) / (max - min)) * 100
+  const [showCustom, setShowCustom] = useState(false)
+  const activePreset = presets.find((p) => p.min === currentMin && p.max === currentMax)
+  const hasCustom = !activePreset && (currentMin || currentMax)
 
   return (
     <div>
-      {/* Value badges */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 bg-secondary rounded-2xl px-4 py-3 text-center">
-          <p className="text-[10px] text-muted font-semibold uppercase tracking-wide mb-0.5">Min</p>
-          <p className="text-[16px] font-bold text-foreground">{formatMin(valueMin)}</p>
-        </div>
-        <div className="w-5 h-px bg-border flex-shrink-0" />
-        <div className="flex-1 bg-secondary rounded-2xl px-4 py-3 text-center">
-          <p className="text-[10px] text-muted font-semibold uppercase tracking-wide mb-0.5">Max</p>
-          <p className="text-[16px] font-bold text-foreground">
-            {formatMax(valueMax)}{valueMax >= max ? '' : ''}
-          </p>
-        </div>
+      <div className="flex items-baseline justify-between mb-4">
+        <p className="text-[15px] font-bold text-foreground">{title}</p>
+        <p className="text-[12px] text-muted">{subtitle}</p>
       </div>
 
-      {/* Slider track */}
-      <div className="relative h-10 flex items-center mx-3">
-        <div className="absolute left-0 right-0 h-1.5 bg-border rounded-full" />
-        <div
-          className="absolute h-1.5 bg-foreground rounded-full pointer-events-none"
-          style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
-        />
-        {/* Visual handles */}
-        <div
-          className="absolute w-7 h-7 bg-background border-2 border-foreground rounded-full shadow-lg pointer-events-none -translate-x-1/2 z-10"
-          style={{ left: `${minPct}%` }}
-        />
-        <div
-          className="absolute w-7 h-7 bg-background border-2 border-foreground rounded-full shadow-lg pointer-events-none -translate-x-1/2 z-10"
-          style={{ left: `${maxPct}%` }}
-        />
-        {/* Min range input */}
-        <input
-          type="range" min={min} max={max} step={step} value={valueMin}
-          onChange={(e) => {
-            const v = Math.min(Number(e.target.value), valueMax - step)
-            onChangeMin(v)
-          }}
-          className="range-slider"
-          style={{ zIndex: valueMin >= valueMax - step ? 5 : 3 }}
-        />
-        {/* Max range input */}
-        <input
-          type="range" min={min} max={max} step={step} value={valueMax}
-          onChange={(e) => {
-            const v = Math.max(Number(e.target.value), valueMin + step)
-            onChangeMax(v)
-          }}
-          className="range-slider"
-          style={{ zIndex: 4 }}
-        />
+      {/* Preset chips — wrap layout */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {/* "Any" chip */}
+        <button
+          onClick={() => { onSelect('', ''); setShowCustom(false) }}
+          className={`h-10 px-4 rounded-full border-2 text-[13px] font-semibold transition-all active:scale-[0.97] ${
+            !currentMin && !currentMax
+              ? 'bg-foreground text-background border-foreground'
+              : 'bg-background text-foreground border-border'
+          }`}
+        >
+          Any
+        </button>
+
+        {presets.map((p) => {
+          const active = p.min === currentMin && p.max === currentMax
+          return (
+            <button
+              key={p.label}
+              onClick={() => { onSelect(p.min, p.max); setShowCustom(false) }}
+              className={`h-10 px-4 rounded-full border-2 text-[13px] font-semibold transition-all active:scale-[0.97] ${
+                active
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-foreground border-border'
+              }`}
+            >
+              {p.label}
+            </button>
+          )
+        })}
+
+        {/* Custom toggle */}
+        <button
+          onClick={() => setShowCustom((v) => !v)}
+          className={`h-10 px-4 rounded-full border-2 text-[13px] font-semibold flex items-center gap-1 transition-all active:scale-[0.97] ${
+            hasCustom
+              ? 'bg-foreground text-background border-foreground'
+              : showCustom
+              ? 'bg-secondary border-border text-foreground'
+              : 'bg-background text-foreground border-border'
+          }`}
+        >
+          {hasCustom
+            ? currentMin && currentMax
+              ? `${inputPrefix ?? ''}${currentMin} – ${currentMax}${inputSuffix ?? ''}`
+              : currentMin
+              ? `${inputPrefix ?? ''}${currentMin}+`
+              : `Up to ${currentMax}${inputSuffix ?? ''}`
+            : 'Custom'}
+          <ChevronDown
+            size={13}
+            strokeWidth={2.5}
+            className={`transition-transform ${showCustom ? 'rotate-180' : ''}`}
+          />
+        </button>
       </div>
+
+      {/* Custom inputs */}
+      <AnimatePresence>
+        {showCustom && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            {(() => {
+              const minNum = currentMin ? Number(currentMin) : null
+              const maxNum = currentMax ? Number(currentMax) : null
+              const invalid = minNum !== null && maxNum !== null && minNum > maxNum
+              return (
+                <>
+                  <div className="flex gap-3 pt-1 pb-2">
+                    <div className="flex-1">
+                      <label className="block text-[11px] font-semibold text-muted uppercase tracking-wide mb-1.5">Min</label>
+                      <div className="relative">
+                        {inputPrefix && (
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">{inputPrefix}</span>
+                        )}
+                        <input
+                          type="number"
+                          placeholder="0"
+                          value={currentMin}
+                          onChange={(e) => onSelect(e.target.value, currentMax)}
+                          className={`w-full h-12 rounded-xl border-2 text-foreground text-[15px] bg-background transition-colors ${invalid ? 'border-red-400' : 'border-border focus:border-foreground'} ${inputPrefix ? 'pl-7 pr-3' : inputSuffix ? 'pl-3 pr-10' : 'px-3'}`}
+                        />
+                        {inputSuffix && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">{inputSuffix}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-end pb-3 text-muted text-lg">—</div>
+                    <div className="flex-1">
+                      <label className="block text-[11px] font-semibold text-muted uppercase tracking-wide mb-1.5">Max</label>
+                      <div className="relative">
+                        {inputPrefix && (
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">{inputPrefix}</span>
+                        )}
+                        <input
+                          type="number"
+                          placeholder="No limit"
+                          value={currentMax}
+                          onChange={(e) => onSelect(currentMin, e.target.value)}
+                          className={`w-full h-12 rounded-xl border-2 text-foreground text-[15px] bg-background transition-colors ${invalid ? 'border-red-400' : 'border-border focus:border-foreground'} ${inputPrefix ? 'pl-7 pr-3' : inputSuffix ? 'pl-3 pr-10' : 'px-3'}`}
+                        />
+                        {inputSuffix && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">{inputSuffix}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {invalid && (
+                    <p className="text-[12px] text-red-500 mb-1">Min can't be greater than max</p>
+                  )}
+                </>
+              )
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -201,16 +285,6 @@ export default function FiltersSheet({ open, filters, selectedCities = [], onCha
   const citiesForNeighborhoods = selectedCities.length > 0
     ? selectedCities
     : Object.keys(CURATED_NEIGHBORHOODS)
-
-  const priceMin = filters.priceMin ? parseInt(filters.priceMin) : 0
-  const priceMax = filters.priceMax ? parseInt(filters.priceMax) : PRICE_MAX
-  const sizeMin  = filters.sizeMin  ? parseInt(filters.sizeMin)  : 0
-  const sizeMax  = filters.sizeMax  ? parseInt(filters.sizeMax)  : SIZE_MAX
-
-  const setPriceMin = useCallback((v: number) => onChange({ ...filters, priceMin: v === 0        ? '' : String(v) }), [filters, onChange])
-  const setPriceMax = useCallback((v: number) => onChange({ ...filters, priceMax: v >= PRICE_MAX ? '' : String(v) }), [filters, onChange])
-  const setSizeMin  = useCallback((v: number) => onChange({ ...filters, sizeMin:  v === 0        ? '' : String(v) }), [filters, onChange])
-  const setSizeMax  = useCallback((v: number) => onChange({ ...filters, sizeMax:  v >= SIZE_MAX  ? '' : String(v) }), [filters, onChange])
 
   const toggleRoom = (r: number) => onChange({
     ...filters,
@@ -274,31 +348,27 @@ export default function FiltersSheet({ open, filters, selectedCities = [], onCha
 
               {/* ── Price ── */}
               <div className="px-5 pt-5 pb-6 border-b border-border">
-                <div className="flex items-baseline justify-between mb-5">
-                  <p className="text-[15px] font-bold text-foreground">Price range</p>
-                  <p className="text-[12px] text-muted">per month</p>
-                </div>
-                <DualRangeSlider
-                  min={0} max={PRICE_MAX} step={PRICE_STEP}
-                  valueMin={priceMin} valueMax={priceMax}
-                  onChangeMin={setPriceMin} onChangeMax={setPriceMax}
-                  formatMin={(v) => v === 0 ? 'Any' : `€${v.toLocaleString()}`}
-                  formatMax={(v) => v >= PRICE_MAX ? 'Any' : `€${v.toLocaleString()}`}
+                <RangeSection
+                  title="Price range"
+                  subtitle="per month"
+                  presets={PRICE_PRESETS}
+                  currentMin={filters.priceMin}
+                  currentMax={filters.priceMax}
+                  onSelect={(min, max) => onChange({ ...filters, priceMin: min, priceMax: max })}
+                  inputPrefix="€"
                 />
               </div>
 
               {/* ── Size ── */}
               <div className="px-5 pt-5 pb-6 border-b border-border">
-                <div className="flex items-baseline justify-between mb-5">
-                  <p className="text-[15px] font-bold text-foreground">Size</p>
-                  <p className="text-[12px] text-muted">square metres</p>
-                </div>
-                <DualRangeSlider
-                  min={0} max={SIZE_MAX} step={SIZE_STEP}
-                  valueMin={sizeMin} valueMax={sizeMax}
-                  onChangeMin={setSizeMin} onChangeMax={setSizeMax}
-                  formatMin={(v) => v === 0 ? 'Any' : `${v} m²`}
-                  formatMax={(v) => v >= SIZE_MAX ? 'Any' : `${v} m²`}
+                <RangeSection
+                  title="Size"
+                  subtitle="square metres"
+                  presets={SIZE_PRESETS}
+                  currentMin={filters.sizeMin}
+                  currentMax={filters.sizeMax}
+                  onSelect={(min, max) => onChange({ ...filters, sizeMin: min, sizeMax: max })}
+                  inputSuffix=" m²"
                 />
               </div>
 

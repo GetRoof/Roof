@@ -55,9 +55,17 @@ const CITY_META: Record<string, { emoji: string; tag: string; description: strin
   },
 }
 
-const FEATURED_CITIES = ['Amsterdam', 'Rotterdam', 'Utrecht', 'The Hague', 'Den Haag', 'Eindhoven', 'Groningen']
+const FEATURED_CITIES = ['Amsterdam', 'Rotterdam', 'Utrecht', 'The Hague', 'Eindhoven', 'Groningen']
+
+// Normalize city name variants to a canonical form
+function normalizeCity(city: string): string {
+  if (city === 'Den Haag') return 'The Hague'
+  return city
+}
 
 export default function CityPickerSheet({ open, cities, selectedCities, onChange, onClose }: Props) {
+  // Deduplicate cities after normalization
+  const normalizedCities = [...new Set(cities.map(normalizeCity))]
   const [draft, setDraft] = useState<string[]>(selectedCities)
 
   useEffect(() => {
@@ -76,8 +84,8 @@ export default function CityPickerSheet({ open, cities, selectedCities, onChange
   }
 
   const isAll = draft.length === 0
-  const featuredAvailable = FEATURED_CITIES.filter((c) => cities.includes(c))
-  const otherCities = cities.filter((c) => !FEATURED_CITIES.includes(c))
+  const featuredAvailable = FEATURED_CITIES.filter((c) => normalizedCities.includes(c))
+  const otherCities = normalizedCities.filter((c) => !FEATURED_CITIES.includes(c))
 
   return (
     <AnimatePresence>

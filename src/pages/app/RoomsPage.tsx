@@ -256,7 +256,7 @@ export default function RoomsPage() {
       <FiltersSheet
         open={showFilters}
         filters={filters}
-        neighborhoods={allNeighborhoods}
+        selectedCities={selectedCities}
         onChange={handleFiltersChange}
         onClose={() => setShowFilters(false)}
         onReset={() => setFilters(DEFAULT_FILTERS)}

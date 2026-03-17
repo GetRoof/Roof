@@ -97,7 +97,8 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
 
   const commitSwipe = useCallback(
     (direction: 'left' | 'right', throwVelocity = 0) => {
-      if (isAnimating.current || isDone) return
+      if (isAnimating.current) return
+      if (isDone) return
       isAnimating.current = true
 
       const listing = newListings[currentIndex]
@@ -116,7 +117,6 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
         { index: currentIndex, action: direction === 'right' ? 'save' : 'skip', listingId: listing.id },
       ])
       setCurrentIndex((prev) => prev + 1)
-      isAnimating.current = false
 
       animate(exitX, dir * 700, {
         ...SPRING_EXIT,
@@ -124,6 +124,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
         onComplete: () => {
           setExitingListing(null)
           exitX.set(0)
+          isAnimating.current = false
         },
       })
     },

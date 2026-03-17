@@ -43,12 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setLoading(false)
+      // Don't resolve loading if an OAuth fragment is pending — wait for onAuthStateChange
+      const hasOAuthFragment = window.location.hash.includes('access_token')
+      if (!hasOAuthFragment) setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (_event === 'TOKEN_REFRESHED' || _event === 'SIGNED_IN') {
+      if (_event === 'TOKEN_REFRESHED' || _event === 'SIGNED_IN' || _event === 'INITIAL_SESSION') {
         setLoading(false)
       }
     })
