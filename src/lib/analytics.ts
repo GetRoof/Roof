@@ -2,10 +2,9 @@ import { supabase } from './supabase'
 
 /**
  * Lightweight analytics — fire-and-forget event tracking to Supabase.
- * Errors are silently swallowed so tracking never blocks the UI.
+ * Errors are logged in dev mode so tracking issues are visible during development.
  */
 export function track(event: string, properties?: Record<string, unknown>) {
-  // Run async but don't await — non-blocking
   ;(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -16,8 +15,10 @@ export function track(event: string, properties?: Record<string, unknown>) {
         event,
         properties: properties ?? {},
       })
-    } catch {
-      // Silently ignore — analytics should never break the app
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn('[Analytics]', event, err)
+      }
     }
   })()
 }

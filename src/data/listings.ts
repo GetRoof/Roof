@@ -1,3 +1,7 @@
+import type { Source } from './sources'
+
+export { sourceColors } from './sources'
+
 export interface Listing {
   id: string
   title: string
@@ -8,7 +12,7 @@ export interface Listing {
   size: number
   rooms: number
   furnished: 'furnished' | 'unfurnished' | 'upholstered'
-  source: 'Pararius' | 'Kamernet' | 'Huurwoningen' | 'Funda' | 'HousingAnywhere' | 'DirectWonen' | 'Rentola' | 'Kamer.nl' | 'Huurstunt' | '123Wonen'
+  source: Source
   url: string
   image: string
   images: string[]
@@ -18,17 +22,3 @@ export interface Listing {
   postedAtRaw: string
   description: string
 }
-
-export const sourceColors: Record<Listing['source'], string> = {
-  Pararius: '#1B4FFF',
-  Kamernet: '#E84B3C',
-  Huurwoningen: '#00B090',
-  Funda: '#F97316',
-  HousingAnywhere: '#7C3AED',
-  DirectWonen: '#0891B2',
-  Rentola: '#D946EF',
-  'Kamer.nl': '#F59E0B',
-  Huurstunt: '#14B8A6',
-  '123Wonen': '#6366F1',
-}
-

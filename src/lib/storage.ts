@@ -10,6 +10,7 @@ import { Preferences } from '@capacitor/preferences'
  *   2. Use `storage.getItem / setItem / removeItem` everywhere instead of localStorage.
  */
 const cache = new Map<string, string>()
+let hydrated = false
 
 export const storage = {
   /** Load all persisted keys into the in-memory cache. Call once at startup. */
@@ -25,9 +26,17 @@ export const storage = {
     } catch {
       // Graceful degradation if Preferences API isn't available (web/tests)
     }
+    hydrated = true
+  },
+
+  get isHydrated(): boolean {
+    return hydrated
   },
 
   getItem(key: string): string | null {
+    if (!hydrated && import.meta.env.DEV) {
+      console.warn('[Storage] getItem called before hydrate completed for key:', key)
+    }
     return cache.get(key) ?? null
   },
 

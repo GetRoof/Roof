@@ -1,35 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { ActiveFilters, countActiveFilters, ROOM_OPTIONS, FURNISHED_OPTIONS } from '@/data/filters'
 
-export interface ActiveFilters {
-  priceMin: string
-  priceMax: string
-  sizeMin: string
-  sizeMax: string
-  rooms: number[]       // empty = any; [4] means 4+
-  neighborhoods: string[]
-  furnished: 'all' | 'furnished' | 'unfurnished' | 'upholstered'
-}
-
-export const DEFAULT_FILTERS: ActiveFilters = {
-  priceMin: '',
-  priceMax: '',
-  sizeMin: '',
-  sizeMax: '',
-  rooms: [],
-  neighborhoods: [],
-  furnished: 'all',
-}
-
-export function countActiveFilters(f: ActiveFilters): number {
-  let n = 0
-  if (f.priceMin || f.priceMax) n++
-  if (f.sizeMin || f.sizeMax) n++
-  if (f.rooms.length > 0) n++
-  if (f.neighborhoods.length > 0) n++
-  if (f.furnished !== 'all') n++
-  return n
-}
+export { type ActiveFilters, DEFAULT_FILTERS, countActiveFilters } from '@/data/filters'
 
 interface Props {
   open: boolean
@@ -39,15 +12,6 @@ interface Props {
   onClose: () => void
   onReset: () => void
 }
-
-const ROOM_OPTIONS = [1, 2, 3, 4] // 4 = 4+
-
-const FURNISHED_OPTIONS: { value: ActiveFilters['furnished']; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'furnished', label: 'Furnished' },
-  { value: 'unfurnished', label: 'Unfurnished' },
-  { value: 'upholstered', label: 'Upholstered' },
-]
 
 export default function FiltersSheet({ open, filters, neighborhoods, onChange, onClose, onReset }: Props) {
   const toggleRoom = (r: number) => {

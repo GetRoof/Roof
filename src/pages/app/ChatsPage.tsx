@@ -8,22 +8,10 @@ import { useAlerts, Alert, alertMatchesListing } from '../../context/AlertsConte
 import { useOnboarding } from '../../context/OnboardingContext'
 import { Listing } from '../../data/listings'
 import { useListings } from '../../context/ListingsContext'
+import { SOURCE_BADGE_BG } from '@/data/sources'
 
 const FEED_FILTERS = ['All', 'Your alerts', 'New matches'] as const
 type FeedFilter = typeof FEED_FILTERS[number]
-
-const SOURCE_BADGE_BG: Record<string, string> = {
-  Pararius: 'bg-blue-50 dark:bg-blue-950',
-  Kamernet: 'bg-red-50 dark:bg-red-950',
-  Huurwoningen: 'bg-emerald-50 dark:bg-emerald-950',
-  Funda: 'bg-orange-50 dark:bg-orange-950',
-  HousingAnywhere: 'bg-purple-50 dark:bg-purple-950',
-  DirectWonen: 'bg-cyan-50 dark:bg-cyan-950',
-  Rentola: 'bg-fuchsia-50 dark:bg-fuchsia-950',
-  'Kamer.nl': 'bg-amber-50 dark:bg-amber-950',
-  Huurstunt: 'bg-teal-50 dark:bg-teal-950',
-  '123Wonen': 'bg-indigo-50 dark:bg-indigo-950',
-}
 
 export default function AlertsPage() {
   const { alerts, addAlert, updateAlert, removeAlert, markAllRead } = useAlerts()

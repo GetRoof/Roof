@@ -2,29 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Bell, Pencil } from 'lucide-react'
 import { Alert } from '../../context/AlertsContext'
-import { ActiveFilters, DEFAULT_FILTERS } from './FiltersSheet'
-
-const NL_CITIES = [
-  'Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven',
-  'Groningen', 'Leiden', 'Haarlem', 'Delft', 'Maastricht',
-  'Tilburg', 'Breda', 'Nijmegen', 'Arnhem', 'Enschede',
-]
+import { ActiveFilters, DEFAULT_FILTERS, ROOM_OPTIONS, SIZE_PRESETS } from '@/data/filters'
+import { NL_CITIES } from '@/data/cities'
 
 const HOUSING_TYPES: { value: Alert['housingType']; label: string }[] = [
   { value: 'all', label: 'All types' },
   { value: 'apartment', label: 'Apartment' },
   { value: 'studio', label: 'Studio' },
   { value: 'room', label: 'Room' },
-]
-
-const ROOM_OPTIONS = [1, 2, 3, 4] // 4 = 4+
-
-const SIZE_PRESETS = [
-  { label: '< 20m²', min: '', max: '20' },
-  { label: '20–40m²', min: '20', max: '40' },
-  { label: '40–60m²', min: '40', max: '60' },
-  { label: '60–80m²', min: '60', max: '80' },
-  { label: '80m²+', min: '80', max: '' },
 ]
 
 function generateName(cities: string[], type: Alert['housingType']): string {

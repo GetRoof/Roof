@@ -1,21 +1,8 @@
-import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, BellOff } from 'lucide-react'
 import { useListings } from '../../context/ListingsContext'
 import { Listing } from '../../data/listings'
-
-const SOURCE_COLORS: Record<string, string> = {
-  Pararius: 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300',
-  Kamernet: 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300',
-  Huurwoningen: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300',
-  Funda: 'bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300',
-  HousingAnywhere: 'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300',
-  DirectWonen: 'bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300',
-  Rentola: 'bg-fuchsia-50 dark:bg-fuchsia-950 text-fuchsia-700 dark:text-fuchsia-300',
-  'Kamer.nl': 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300',
-  Huurstunt: 'bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300',
-  '123Wonen': 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300',
-}
+import { SOURCE_COLORS_COMBINED } from '@/data/sources'
 
 interface Props {
   open: boolean
@@ -108,7 +95,7 @@ export default function NotificationsSheet({ open, onClose, onOpenListing }: Pro
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <span
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide ${SOURCE_COLORS[listing.source] ?? 'bg-secondary text-muted'}`}
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide ${SOURCE_COLORS_COMBINED[listing.source] ?? 'bg-secondary text-muted'}`}
                           >
                             {listing.source}
                           </span>
