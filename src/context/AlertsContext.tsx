@@ -5,6 +5,21 @@ import { useListings } from './ListingsContext'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import { useAuth } from './AuthContext'
+import { storage } from '../lib/storage'
+
+const LOCAL_ALERTS_KEY = 'roof-local-alerts'
+
+function saveAlertsLocally(alerts: Alert[]) {
+  storage.setItem(LOCAL_ALERTS_KEY, JSON.stringify(alerts))
+}
+
+function loadAlertsLocally(): Alert[] {
+  try {
+    const raw = storage.getItem(LOCAL_ALERTS_KEY)
+    if (raw) return JSON.parse(raw) as Alert[]
+  } catch {}
+  return []
+}
 
 export interface Alert {
   id: string
@@ -84,8 +99,18 @@ const AlertsContext = createContext<AlertsContextType>({
 export function AlertsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { listings } = useListings()
-  const [alerts, setAlerts] = useState<Alert[]>([])
+  // Seed from local cache immediately so UI shows correct state before network
+  const [alerts, setAlertsRaw] = useState<Alert[]>(() => loadAlertsLocally())
   const [seenIds, setSeenIds] = useState<ReadonlySet<string>>(new Set())
+
+  // Wrap setAlerts so every write also persists locally
+  const setAlerts = useCallback((updater: Alert[] | ((prev: Alert[]) => Alert[])) => {
+    setAlertsRaw((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      saveAlertsLocally(next)
+      return next
+    })
+  }, [])
 
   // Load alerts from Supabase
   const loadAlerts = useCallback(async () => {
@@ -100,11 +125,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       if (mapped.length > 0) mapped[0].isMain = true
       setAlerts(mapped)
     }
-  }, [user])
+  }, [user, setAlerts])
 
   // Load alerts on mount and when user changes
   useEffect(() => {
-    if (!user) { setAlerts([]); return }
+    if (!user) return  // keep local cache — don't wipe on auth delay
     loadAlerts()
   }, [user, loadAlerts])
 
@@ -146,7 +171,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         return [...prev, alert]
       })
     }
-  }, [user])
+  }, [user, setAlerts])
 
   const updateAlert = useCallback((id: string, data: Partial<Omit<Alert, 'id' | 'createdAt'>>) => {
     setAlerts((prev) => prev.map((a) => {
@@ -164,7 +189,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
       if (data.filters !== undefined) dbData.filters = data.filters
       supabase.from('alerts').update(dbData).eq('id', id).then(() => {})
     }
-  }, [user])
+  }, [user, setAlerts])
 
   const removeAlert = useCallback((id: string) => {
     setAlerts((prev) => {
@@ -175,7 +200,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     if (user) {
       supabase.from('alerts').delete().eq('id', id)
     }
-  }, [user])
+  }, [user, setAlerts])
 
   const newMatchIds = useMemo(() => {
     const ids = new Set<string>()

@@ -19,7 +19,7 @@ export default function Toggle({ label, checked, onChange }: ToggleProps) {
       >
         <div
           className={`
-            absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200
+            absolute top-1 w-5 h-5 bg-background rounded-full shadow-sm transition-transform duration-200
             ${checked ? 'translate-x-6' : 'translate-x-1'}
           `}
         />

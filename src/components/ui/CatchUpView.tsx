@@ -186,7 +186,12 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
         >
           {/* ── Header ── */}
           <div className="flex-shrink-0 px-5 pt-header pb-3 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-foreground">Catch Up</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Catch Up</h1>
+              {!isDone && newListings.length > 0 && (
+                <p className="text-[13px] text-muted mt-0.5">Your picks for today</p>
+              )}
+            </div>
 
             <div className="flex items-center gap-2">
               {!isDone && newListings.length > 0 && (
@@ -295,7 +300,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
                   AnimatePresence fades it out gracefully on the last card.
                 */}
                 <AnimatePresence>
-                  {remaining > 1 && nextCard && (
+                  {remaining > 1 && nextCard && !exitingListing && (
                     <motion.div
                       key="peek"
                       className="absolute inset-x-3 inset-y-0 z-0 pointer-events-none origin-top"
