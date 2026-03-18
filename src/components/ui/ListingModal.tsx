@@ -99,37 +99,47 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
 
           {/* Sheet */}
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 flex flex-col"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] overflow-hidden z-50 flex flex-col"
             style={{ height: '92%' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 300 }}
           >
-            {/* Hero image — fixed height prevents scroll-behind */}
-            <div className="relative flex-shrink-0 rounded-t-[28px] overflow-hidden bg-secondary" style={{ height: '42%' }}>
-              <ImageGallery images={listing.images} alt={listing.title} fill />
-              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
-              <div className="absolute top-3 inset-x-0 flex justify-center pointer-events-none">
-                <div className="w-10 h-1 rounded-full bg-background/60" />
+            {/* Floating Top Controls (Pull Tab & Close Button) */}
+            <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+              <div className="h-24 bg-gradient-to-b from-black/50 to-transparent" />
+              <div className="absolute top-3 inset-x-0 flex justify-center">
+                <div className="w-10 h-1.5 rounded-full bg-white/70" />
               </div>
               <button
                 onClick={onClose}
-                className="absolute top-3 right-4 w-8 h-8 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center active:opacity-70 transition-opacity"
+                className="absolute top-3 right-4 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform pointer-events-auto"
               >
-                <X size={14} strokeWidth={2.5} className="text-white" />
+                <X size={15} strokeWidth={2.5} className="text-white" />
               </button>
-              <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                {listing.isNew ? (
-                  <span className="bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">New</span>
-                ) : <span />}
-                <SourceBadge source={listing.source} />
-              </div>
             </div>
 
-            {/* Scrollable details — isolated scroll context, cannot bleed over image */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide overscroll-contain">
-              <div className="px-5 pt-5 pb-4">
+            {/* Scrollable details */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide overscroll-contain flex flex-col relative">
+              {/* Hero image — scrolls with content */}
+              <div className="relative w-full aspect-[4/3] max-h-[350px] flex-shrink-0 bg-secondary">
+                <ImageGallery images={listing.images} alt={listing.title} fill />
+                
+                {/* Source badges inside image */}
+                <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none">
+                  <div className="pointer-events-auto">
+                    {listing.isNew ? (
+                      <span className="bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">New</span>
+                    ) : <span />}
+                  </div>
+                  <div className="pointer-events-auto">
+                    <SourceBadge source={listing.source} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-5 pt-6 pb-4">
                 <div className="mb-4">
                   <p className="text-[22px] font-bold text-foreground leading-tight">{listing.neighborhood}</p>
                   <p className="text-sm text-muted mt-0.5">{listing.city}</p>
@@ -162,11 +172,9 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
                   <p className="text-[15px] text-foreground leading-relaxed mb-5">{listing.description}</p>
                 )}
               </div>
-            </div>
 
-            {/* Pinned intro + actions */}
-            <div className="flex-shrink-0 border-t border-border bg-background">
-              <div className="px-5 pt-4 pb-3">
+              {/* Intro message (part of scrollable content) */}
+              <div className="mt-auto flex-shrink-0 border-t border-border/40 py-5 px-5">
                 <button onClick={openEditor} className="w-full text-left active:opacity-75 transition-opacity">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-5 h-5 bg-foreground rounded-md flex items-center justify-center flex-shrink-0">
@@ -175,13 +183,16 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
                     <p className="text-[13px] font-semibold text-foreground">Intro message</p>
                     <p className="text-[11px] text-muted ml-auto">Tap to edit →</p>
                   </div>
-                  <p className="text-[14px] text-foreground leading-relaxed line-clamp-2 bg-secondary rounded-xl px-4 py-3">
+                  <p className="text-[14px] text-foreground leading-relaxed bg-secondary rounded-xl px-4 py-3">
                     {introText}
                   </p>
                 </button>
               </div>
+            </div>
 
-              <div className="px-5 pb-8 flex gap-3">
+            {/* Pinned actions */}
+            <div className="flex-shrink-0 border-t border-border bg-background px-4 pt-3 pb-8">
+              <div className="flex gap-2">
                 {(typeof navigator !== 'undefined' && (navigator.share || navigator.clipboard)) && (
                   <button
                     onClick={async () => {
@@ -193,24 +204,25 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
                         try { await navigator.clipboard.writeText(listing.url) } catch {}
                       }
                     }}
-                    className="w-14 h-14 bg-secondary rounded-2xl flex items-center justify-center active:scale-[0.98] transition-all flex-shrink-0"
+                    className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center active:scale-[0.98] transition-all flex-shrink-0"
+                    aria-label="Share"
                   >
-                    <Share2 size={18} strokeWidth={1.8} className="text-foreground" />
+                    <Share2 size={16} strokeWidth={2} className="text-foreground" />
                   </button>
                 )}
                 <button
                   onClick={copyIntro}
-                  className={`flex-1 h-14 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${copied ? 'bg-green-500 text-white' : 'bg-secondary text-foreground'}`}
+                  className={`flex-1 h-12 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all min-w-0 ${copied ? 'bg-green-500 text-white' : 'bg-secondary text-foreground'}`}
                 >
-                  {copied ? <><Check size={16} strokeWidth={2.5} />Copied!</> : <><Copy size={15} />Copy intro</>}
+                  {copied ? <><Check size={14} strokeWidth={2.5} /><span className="truncate">Copied!</span></> : <><Copy size={14} /><span className="truncate">Copy intro</span></>}
                 </button>
                 <a
                   href={listing.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                  className="flex-[1.2] h-12 bg-foreground text-background rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all min-w-0"
                 >
-                  Go to listing <ExternalLink size={15} />
+                  <span className="truncate">Go to listing</span> <ExternalLink size={14} className="flex-shrink-0" />
                 </a>
               </div>
             </div>
