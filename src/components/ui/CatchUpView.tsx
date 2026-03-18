@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, forwardRef } from 'react'
 import {
   motion,
   useMotionValue,
@@ -18,9 +18,44 @@ const SWIPE_THRESHOLD    = 80
 const VELOCITY_THRESHOLD = 400
 
 // ─── Spring presets ───────────────────────────────────────────────────────────
-const SPRING_EXIT   = { type: 'spring' as const, stiffness: 160, damping: 20, mass: 0.75 }
 const SPRING_RETURN = { type: 'spring' as const, stiffness: 320, damping: 26, mass: 0.9 }
-const SPRING_UNDO   = { type: 'spring' as const, stiffness: 260, damping: 26, mass: 0.9 }
+
+// ─── Variants ────────────────────────────────────────────────────────────────
+const cardVariants = {
+  enter: {
+    scale: 0.95,
+    y: 10,
+    opacity: 0.85,
+  },
+  center: {
+    scale: 1,
+    y: 0,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }
+  },
+  exit: (custom: any) => {
+    const dir = custom?.direction === 'right' ? 1 : -1
+    return {
+      x: dir * 700,
+      opacity: 0,
+      rotate: dir * 15,
+      transition: {
+        x: { type: 'spring', stiffness: 160, damping: 20, mass: 0.75, velocity: custom?.velocity || 0 },
+        opacity: { duration: 0.25 }
+      }
+    }
+  },
+  undo: (custom: any) => {
+    const dir = custom?.direction === 'right' ? 1 : -1
+    return {
+      x: dir * 600,
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      rotate: dir * 15
+    }
+  }
+}
 
 /* ─── Card shell ─────────────────────────────────────────────────────────────
    Renders a ListingCard inside the rounded/shadow shell used by all card layers.
@@ -32,7 +67,7 @@ function CardShell({ listing, isSaved, onToggleSave, onClick }: {
   onClick: () => void
 }) {
   return (
-    <div className="rounded-3xl overflow-hidden shadow-lg">
+    <div className="rounded-3xl overflow-hidden shadow-lg h-full">
       <ListingCard
         listing={listing}
         index={0}
@@ -43,6 +78,79 @@ function CardShell({ listing, isSaved, onToggleSave, onClick }: {
     </div>
   )
 }
+
+/* ─── SwipeableCard ──────────────────────────────────────────────────────────*/
+const SwipeableCard = forwardRef<HTMLDivElement, any>(({
+  listing,
+  isTop,
+  isSaved,
+  onToggleSave,
+  onOpenListing,
+  onSwipe,
+  ...rest
+}, ref) => {
+  const x = useMotionValue(0)
+  const rotate = useTransform(x, [-220, 220], [-8, 8])
+  const likeOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
+  const skipOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
+  const hasDragged = useRef(false)
+
+  return (
+    <motion.div
+      ref={ref}
+      className={`absolute inset-0 z-${isTop ? 10 : 0} ${isTop ? '' : 'pointer-events-none origin-top'}`}
+      style={{ x, rotate, touchAction: isTop ? 'none' : 'auto', cursor: isTop ? 'grab' : 'auto' }}
+      onPanStart={() => { if (isTop) hasDragged.current = false }}
+      onPan={(_, info) => {
+        if (!isTop) return
+        x.set(info.offset.x)
+        if (Math.abs(info.offset.x) > 4) hasDragged.current = true
+      }}
+      onPanEnd={(_, info) => {
+        if (!isTop) return
+        const shouldSwipe = Math.abs(info.offset.x) > SWIPE_THRESHOLD || Math.abs(info.velocity.x) > VELOCITY_THRESHOLD
+        if (shouldSwipe) {
+          onSwipe(info.offset.x > 0 ? 'right' : 'left', info.velocity.x)
+        } else {
+          animate(x, 0, SPRING_RETURN)
+        }
+      }}
+      onClick={() => { if (!hasDragged.current && isTop) onOpenListing() }}
+      {...rest}
+    >
+      <div className="relative rounded-3xl overflow-hidden shadow-xl h-full">
+        <ListingCard
+          listing={listing}
+          index={0}
+          onClick={() => {}}
+          isSaved={isSaved}
+          onToggleSave={() => { hapticLight(); onToggleSave() }}
+        />
+
+        {/* LIKE stamp */}
+        <motion.div
+          className="absolute inset-0 flex items-start justify-start p-5 pointer-events-none"
+          style={{ opacity: likeOpacity, background: 'rgba(34,197,94,0.07)' }}
+        >
+          <div className="border-[3px] border-green-500 px-4 py-1.5 rounded-xl -rotate-[20deg] mt-1">
+            <span className="text-green-500 text-lg font-black tracking-widest uppercase">Like</span>
+          </div>
+        </motion.div>
+
+        {/* NOPE stamp */}
+        <motion.div
+          className="absolute inset-0 flex items-start justify-end p-5 pointer-events-none"
+          style={{ opacity: skipOpacity, background: 'rgba(0,0,0,0.04)' }}
+        >
+          <div className="border-[3px] border-foreground/50 px-4 py-1.5 rounded-xl rotate-[20deg] mt-1">
+            <span className="text-foreground/50 text-lg font-black tracking-widest uppercase">Nope</span>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+})
+SwipeableCard.displayName = 'SwipeableCard'
 
 /* ─── Catch Up View ──────────────────────────────────────────────────────────*/
 
@@ -65,40 +173,30 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
   const [history, setHistory] = useState<
     { index: number; action: 'save' | 'skip'; listingId: string }[]
   >([])
+  
+  const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null)
+  const [exitVelocity, setExitVelocity] = useState<number>(0)
+  const [isUndoAction, setIsUndoAction] = useState(false)
   const isAnimating = useRef(false)
-  const hasDragged  = useRef(false)
-
-  // All motion values at top level — never inside conditions (Rules of Hooks)
-  const topX        = useMotionValue(0)
-  const exitX       = useMotionValue(0)
-  const dragRotate  = useTransform(topX, [-220, 220], [-8, 8])
-  const likeOpacity = useTransform(topX, [0, SWIPE_THRESHOLD], [0, 1])
-  const skipOpacity = useTransform(topX, [-SWIPE_THRESHOLD, 0], [1, 0])
-
-  const [exitingListing, setExitingListing] = useState<Listing | null>(null)
 
   useEffect(() => {
     if (open) {
       setCurrentIndex(0)
       setHistory([])
-      setExitingListing(null)
-      topX.set(0)
-      exitX.set(0)
+      setExitDirection(null)
+      setIsUndoAction(false)
       isAnimating.current = false
     }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open])
 
   const isDone    = currentIndex >= newListings.length
   const remaining = Math.max(newListings.length - currentIndex, 0)
   const topCard   = newListings[currentIndex]
-  const nextCard  = newListings[currentIndex + 1]
-  // Spacer uses the first listing so the container is always the right height
   const spacerCard = newListings[0]
 
   const commitSwipe = useCallback(
     (direction: 'left' | 'right', throwVelocity = 0) => {
-      if (isAnimating.current) return
-      if (isDone) return
+      if (isAnimating.current || isDone) return
       isAnimating.current = true
 
       const listing = newListings[currentIndex]
@@ -106,60 +204,35 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
 
       if (direction === 'right' && !isSaved(listing.id)) toggleSave(listing.id)
 
-      const dir = direction === 'right' ? 1 : -1
-
-      exitX.set(topX.get())
-      setExitingListing(listing)
-      topX.set(0)
+      setExitDirection(direction)
+      setExitVelocity(throwVelocity)
+      setIsUndoAction(false)
 
       setHistory((prev) => [
         ...prev,
         { index: currentIndex, action: direction === 'right' ? 'save' : 'skip', listingId: listing.id },
       ])
       setCurrentIndex((prev) => prev + 1)
-
-      animate(exitX, dir * 700, {
-        ...SPRING_EXIT,
-        velocity: throwVelocity * dir,
-        onComplete: () => {
-          setExitingListing(null)
-          exitX.set(0)
-          isAnimating.current = false
-        },
-      })
+      
+      setTimeout(() => { isAnimating.current = false }, 250)
     },
-    [currentIndex, isDone, newListings, isSaved, toggleSave, topX, exitX],
-  )
-
-  const handlePanEnd = useCallback(
-    (_: PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => {
-      if (isAnimating.current) return
-      const shouldSwipe =
-        Math.abs(info.offset.x) > SWIPE_THRESHOLD ||
-        Math.abs(info.velocity.x) > VELOCITY_THRESHOLD
-      if (shouldSwipe) {
-        commitSwipe(info.offset.x > 0 ? 'right' : 'left', info.velocity.x)
-      } else {
-        animate(topX, 0, SPRING_RETURN)
-      }
-    },
-    [commitSwipe, topX],
+    [currentIndex, isDone, newListings, isSaved, toggleSave]
   )
 
   const handleUndo = useCallback(() => {
     if (history.length === 0 || isAnimating.current) return
     isAnimating.current = true
+    
     const last = history[history.length - 1]
     if (last.action === 'save' && isSaved(last.listingId)) toggleSave(last.listingId)
+    
+    setIsUndoAction(true)
+    setExitDirection(last.action === 'save' ? 'right' : 'left')
     setCurrentIndex(last.index)
     setHistory((prev) => prev.slice(0, -1))
-    const dir = last.action === 'save' ? 1 : -1
-    topX.set(dir * 600)
-    animate(topX, 0, {
-      ...SPRING_UNDO,
-      onComplete: () => { isAnimating.current = false },
-    })
-  }, [history, isSaved, toggleSave, topX])
+    
+    setTimeout(() => { isAnimating.current = false }, 250)
+  }, [history, isSaved, toggleSave])
 
   const handleShare = useCallback(async () => {
     if (!topCard) return
@@ -294,115 +367,28 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
                   />
                 </div>
 
-                {/*
-                  ── Peek card ─────────────────────────────────────────────────
-                  Stable key "peek" so it never remounts between swipes.
-                  Shown for every card except the last (remaining > 1).
-                  AnimatePresence fades it out gracefully on the last card.
-                */}
-                <AnimatePresence>
-                  {remaining > 1 && nextCard && !exitingListing && (
-                    <motion.div
-                      key="peek"
-                      className="absolute inset-x-3 inset-y-0 z-0 pointer-events-none origin-top"
-                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                      animate={{ opacity: 0.85, scale: 0.95, y: 10 }}
-                      exit={{ opacity: 0, scale: 0.92, y: 14 }}
-                      transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-                    >
-                      <CardShell
-                        listing={nextCard}
-                        isSaved={isSaved(nextCard.id)}
-                        onToggleSave={() => {}}
-                        onClick={() => {}}
+                {/* Array Mapped Stack for Preserved DOM nodes ────────────────*/}
+                <AnimatePresence custom={{ direction: exitDirection, velocity: exitVelocity }}>
+                  {newListings.slice(currentIndex, currentIndex + 2).reverse().map((listing, index, arr) => {
+                    const isTop = index === arr.length - 1;
+                    return (
+                      <SwipeableCard
+                        key={listing.id}
+                        listing={listing}
+                        isTop={isTop}
+                        isSaved={isSaved(listing.id)}
+                        onToggleSave={() => toggleSave(listing.id)}
+                        onOpenListing={() => onOpenListing(listing)}
+                        onSwipe={(dir: 'left' | 'right', vel: number) => commitSwipe(dir, vel)}
+                        variants={cardVariants}
+                        custom={{ direction: exitDirection, velocity: exitVelocity }}
+                        initial={isUndoAction ? "undo" : "enter"}
+                        animate={isTop ? "center" : "enter"}
+                        exit="exit"
                       />
-                    </motion.div>
-                  )}
+                    )
+                  })}
                 </AnimatePresence>
-
-                {/*
-                  ── Top card ──────────────────────────────────────────────────
-                  Absolute, sits over the spacer. Starts from peek position
-                  (scale 0.95, y 10) and springs to full size — so new cards
-                  appear to "promote" up from behind, not flash in from nowhere.
-                */}
-                <AnimatePresence>
-                  {topCard && !exitingListing && (
-                    <motion.div
-                      key={topCard.id}
-                      className="absolute inset-0 z-10"
-                      style={{
-                        x: topX,
-                        rotate: dragRotate,
-                        touchAction: 'none',
-                        cursor: 'grab',
-                      }}
-                      initial={{ scale: 0.95, y: 10, opacity: 0.85 }}
-                      animate={{ scale: 1, y: 0, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
-                      onPanStart={() => { hasDragged.current = false }}
-                      onPan={(_, info) => {
-                        topX.set(info.offset.x)
-                        if (Math.abs(info.offset.x) > 4) hasDragged.current = true
-                      }}
-                      onPanEnd={handlePanEnd}
-                      onClick={() => { if (!hasDragged.current) onOpenListing(topCard) }}
-                    >
-                      <div className="relative rounded-3xl overflow-hidden shadow-xl h-full">
-                        <ListingCard
-                          listing={topCard}
-                          index={0}
-                          onClick={() => {}}
-                          isSaved={isSaved(topCard.id)}
-                          onToggleSave={() => { hapticLight(); toggleSave(topCard.id) }}
-                        />
-
-                        {/* LIKE stamp */}
-                        <motion.div
-                          className="absolute inset-0 flex items-start justify-start p-5 pointer-events-none"
-                          style={{ opacity: likeOpacity, background: 'rgba(34,197,94,0.07)' }}
-                        >
-                          <div className="border-[3px] border-green-500 px-4 py-1.5 rounded-xl -rotate-[20deg] mt-1">
-                            <span className="text-green-500 text-lg font-black tracking-widest uppercase">Like</span>
-                          </div>
-                        </motion.div>
-
-                        {/* NOPE stamp */}
-                        <motion.div
-                          className="absolute inset-0 flex items-start justify-end p-5 pointer-events-none"
-                          style={{ opacity: skipOpacity, background: 'rgba(0,0,0,0.04)' }}
-                        >
-                          <div className="border-[3px] border-foreground/50 px-4 py-1.5 rounded-xl rotate-[20deg] mt-1">
-                            <span className="text-foreground/50 text-lg font-black tracking-widest uppercase">Nope</span>
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/*
-                  ── Exit card ─────────────────────────────────────────────────
-                  Absolute overlay that flies off while the new top card
-                  promotes up from below. No enter animation — it starts
-                  exactly where the top card was (exitX = topX snapshot).
-                */}
-                {exitingListing && (
-                  <motion.div
-                    className="absolute inset-0 z-20 pointer-events-none"
-                    style={{ x: exitX, rotate: dragRotate }}
-                  >
-                    <div className="rounded-3xl overflow-hidden shadow-xl h-full">
-                      <ListingCard
-                        listing={exitingListing}
-                        index={0}
-                        onClick={() => {}}
-                        isSaved={isSaved(exitingListing.id)}
-                        onToggleSave={() => {}}
-                      />
-                    </div>
-                  </motion.div>
-                )}
 
               </div>
             )}
@@ -419,7 +405,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
               </button>
 
               <button
-                onClick={() => { hapticLight(); commitSwipe('left') }}
+                onClick={() => { hapticLight(); commitSwipe('left', 800) }}
                 className="flex-1 h-14 bg-secondary text-foreground rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
               >
                 <SkipForward size={16} strokeWidth={2} />
@@ -427,7 +413,7 @@ export default function CatchUpView({ open, onClose, onOpenListing }: Props) {
               </button>
 
               <button
-                onClick={() => { hapticLight(); commitSwipe('right') }}
+                onClick={() => { hapticLight(); commitSwipe('right', 800) }}
                 className="flex-1 h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
               >
                 <Heart size={16} strokeWidth={2} fill="currentColor" />
