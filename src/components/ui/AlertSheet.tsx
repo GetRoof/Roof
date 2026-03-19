@@ -207,22 +207,26 @@ export default function AlertSheet({ open, onClose, onSave, onUpdate, editAlert,
                     className="w-full h-11 px-4 rounded-xl border border-border text-[15px] text-foreground placeholder:text-muted focus:border-foreground transition-colors outline-none"
                   />
                   <AnimatePresence>
-                    {showDropdown && cityInput.length > 0 && suggestions.length > 0 && (
+                    {showDropdown && cityInput.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         className="absolute top-full mt-1 left-0 right-0 bg-background border border-border rounded-2xl shadow-md z-10 overflow-hidden"
                       >
-                        {suggestions.slice(0, 5).map((city) => (
-                          <button
-                            key={city}
-                            onMouseDown={() => addCity(city)}
-                            className="w-full text-left px-4 py-3 text-[15px] text-foreground hover:bg-secondary transition-colors border-b last:border-0 border-border"
-                          >
-                            {city}
-                          </button>
-                        ))}
+                        {suggestions.length > 0 ? (
+                          suggestions.slice(0, 5).map((city) => (
+                            <button
+                              key={city}
+                              onMouseDown={() => addCity(city)}
+                              className="w-full text-left px-4 py-3 text-[15px] text-foreground hover:bg-secondary transition-colors border-b last:border-0 border-border"
+                            >
+                              {city}
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-muted">No cities found</p>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>

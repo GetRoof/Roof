@@ -131,6 +131,8 @@ export default function CircularCarousel({
     }
   }, [listings])
 
+  if (listings.length === 0) return null
+
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
     <motion.div

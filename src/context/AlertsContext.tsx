@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import { useAuth } from './AuthContext'
 import { storage } from '../lib/storage'
+import { useToast } from './ToastContext'
 
 const LOCAL_ALERTS_KEY = 'roof-local-alerts'
 
@@ -98,6 +99,7 @@ const AlertsContext = createContext<AlertsContextType>({
 
 export function AlertsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const { listings } = useListings()
   // Seed from local cache immediately so UI shows correct state before network
   const [alerts, setAlertsRaw] = useState<Alert[]>(() => loadAlertsLocally())
@@ -163,13 +165,15 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         .insert(alertToRow(user.id, data))
         .select()
         .single()
-        .then(({ data: row }) => {
-          if (row) setAlerts((prev) => {
-            const alert = rowToAlert(row)
-            // First alert becomes the main alert
-            if (prev.length === 0) alert.isMain = true
-            return [...prev, alert]
-          })
+        .then(({ data: row, error }) => {
+          if (row && !error) {
+            setAlerts((prev) => {
+              const alert = rowToAlert(row)
+              if (prev.length === 0) alert.isMain = true
+              return [...prev, alert]
+            })
+            toast('Alert created', '🔔')
+          }
         })
     } else {
       setAlerts((prev) => {
@@ -177,8 +181,9 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         if (prev.length === 0) alert.isMain = true
         return [...prev, alert]
       })
+      toast('Alert created', '🔔')
     }
-  }, [user, setAlerts])
+  }, [user, toast, setAlerts])
 
   const updateAlert = useCallback(async (id: string, data: Partial<Omit<Alert, 'id' | 'createdAt'>>) => {
     setAlerts((prev) => prev.map((a) => {
@@ -218,6 +223,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
 
     // Optimistic local update (immediate UI feedback)
     setAlerts((prev) => prev.filter((a) => a.id !== id))
+    toast('Alert deleted')
     track('alert_deleted', { alert_id: id })
 
     // Await the DB delete so Supabase is consistent before any re-fetch
@@ -234,7 +240,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     } else {
       pendingDeletes.current.delete(id)
     }
-  }, [user, alerts, setAlerts, loadAlerts])
+  }, [user, alerts, toast, setAlerts, loadAlerts])
 
   const newMatchIds = useMemo(() => {
     const ids = new Set<string>()

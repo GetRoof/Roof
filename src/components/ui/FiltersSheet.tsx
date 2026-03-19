@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronDown } from 'lucide-react'
+import { Listing } from '../../data/listings'
 
 export interface ActiveFilters {
   priceMin: string
@@ -276,12 +277,13 @@ interface Props {
   filters: ActiveFilters
   neighborhoods?: string[]
   selectedCities?: string[]
+  listings?: Listing[]
   onChange: (f: ActiveFilters) => void
   onClose: () => void
   onReset: () => void
 }
 
-export default function FiltersSheet({ open, filters, selectedCities = [], onChange, onClose, onReset }: Props) {
+export default function FiltersSheet({ open, filters, selectedCities = [], listings, onChange, onClose, onReset }: Props) {
   const citiesForNeighborhoods = selectedCities.length > 0
     ? selectedCities
     : Object.keys(CURATED_NEIGHBORHOODS)
@@ -299,6 +301,23 @@ export default function FiltersSheet({ open, filters, selectedCities = [], onCha
   })
 
   const activeCount = countActiveFilters(filters)
+
+  const matchCount = useMemo(() => {
+    if (!listings) return null
+    return listings.filter((l) => {
+      if (filters.priceMin && l.price < parseInt(filters.priceMin)) return false
+      if (filters.priceMax && l.price > parseInt(filters.priceMax)) return false
+      if (filters.sizeMin && l.size < parseInt(filters.sizeMin)) return false
+      if (filters.sizeMax && l.size > parseInt(filters.sizeMax)) return false
+      if (filters.rooms.length > 0) {
+        const matches = filters.rooms.some((r) => (r === 4 ? l.rooms >= 4 : l.rooms === r))
+        if (!matches) return false
+      }
+      if (filters.furnished !== 'all' && l.furnished !== filters.furnished) return false
+      if (filters.neighborhoods.length > 0 && !filters.neighborhoods.includes(l.neighborhood)) return false
+      return true
+    }).length
+  }, [listings, filters])
 
   return (
     <AnimatePresence>
@@ -458,9 +477,19 @@ export default function FiltersSheet({ open, filters, selectedCities = [], onCha
             <div className="px-5 pt-3 pb-6 flex-shrink-0 border-t border-border bg-background">
               <button
                 onClick={onClose}
-                className="w-full h-14 bg-foreground text-background rounded-2xl text-[15px] font-semibold active:scale-[0.98] active:opacity-80 transition-all"
+                className={`w-full h-14 rounded-2xl text-[15px] font-semibold active:scale-[0.98] active:opacity-80 transition-all ${
+                  matchCount === 0
+                    ? 'bg-red-500 text-white'
+                    : 'bg-foreground text-background'
+                }`}
               >
-                {activeCount > 0 ? `Apply ${activeCount} filter${activeCount !== 1 ? 's' : ''}` : 'Show all listings'}
+                {matchCount !== null
+                  ? matchCount === 0
+                    ? 'No listings match'
+                    : `Show ${matchCount} listing${matchCount !== 1 ? 's' : ''}`
+                  : activeCount > 0
+                    ? `Apply ${activeCount} filter${activeCount !== 1 ? 's' : ''}`
+                    : 'Show all listings'}
               </button>
             </div>
           </motion.div>

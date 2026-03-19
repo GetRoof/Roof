@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import { useAuth } from './AuthContext'
+import { useToast } from './ToastContext'
 
 interface SavedContextType {
   savedIds: Set<string>
@@ -15,9 +16,14 @@ const SavedContext = createContext<SavedContextType>({
   isSaved: () => false,
 })
 
+const SAVE_DEBOUNCE_MS = 500
+
 export function SavedProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const savedIdsRef = useRef<Set<string>>(savedIds)
+  const pendingWrites = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
   // Load saved listings from Supabase when user signs in
   useEffect(() => {
@@ -39,18 +45,44 @@ export function SavedProvider({ children }: { children: ReactNode }) {
   const toggleSave = (listingId: string) => {
     const isSaving = !savedIds.has(listingId)
     track(isSaving ? 'listing_saved' : 'listing_unsaved', { listing_id: listingId })
+    toast(isSaving ? 'Saved to favorites' : 'Removed from favorites', isSaving ? '❤️' : undefined)
+
+    // Optimistic local update — instant
     setSavedIds((prev) => {
       const next = new Set(prev)
       isSaving ? next.add(listingId) : next.delete(listingId)
+      savedIdsRef.current = next
       return next
     })
 
+    // Debounced Supabase write — only the final state is sent
     if (user) {
-      if (isSaving) {
-        supabase.from('saved_listings').insert({ user_id: user.id, listing_id: listingId })
-      } else {
-        supabase.from('saved_listings').delete().eq('user_id', user.id).eq('listing_id', listingId)
-      }
+      const existing = pendingWrites.current.get(listingId)
+      if (existing) clearTimeout(existing)
+
+      const userId = user.id
+      pendingWrites.current.set(
+        listingId,
+        setTimeout(() => {
+          pendingWrites.current.delete(listingId)
+          // Read final state from ref (pure — no side-effects in state setters)
+          const shouldBeSaved = savedIdsRef.current.has(listingId)
+          if (shouldBeSaved) {
+            supabase
+              .from('saved_listings')
+              .upsert(
+                { user_id: userId, listing_id: listingId },
+                { onConflict: 'user_id,listing_id' },
+              )
+          } else {
+            supabase
+              .from('saved_listings')
+              .delete()
+              .eq('user_id', userId)
+              .eq('listing_id', listingId)
+          }
+        }, SAVE_DEBOUNCE_MS),
+      )
     }
   }
 

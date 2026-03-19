@@ -63,6 +63,7 @@ const ListingCard = memo(forwardRef<HTMLDivElement, Props>(
           transformOrigin: 'top center',
           willChange: 'transform',
         }}
+        data-testid="listing-card"
         className="bg-background rounded-3xl border border-border overflow-hidden shadow-xs cursor-pointer"
       >
         {/* Image */}
@@ -105,6 +106,7 @@ const ListingCard = memo(forwardRef<HTMLDivElement, Props>(
               onToggleSave()
             }}
             data-tour="save"
+            data-testid="save-button"
             className="absolute top-3 right-3 w-8 h-8 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xs active:scale-90 transition-transform text-foreground"
           >
             <svg
