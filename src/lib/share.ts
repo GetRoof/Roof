@@ -19,9 +19,37 @@ export async function shareListing(options: ShareOptions): Promise<void> {
       url: options.url,
       dialogTitle: 'Share listing',
     })
-  } else if (navigator.share) {
-    await navigator.share(options)
-  } else if (navigator.clipboard) {
-    await navigator.clipboard.writeText(options.url)
+  } else if (typeof navigator !== 'undefined') {
+    let shareFailed = false
+
+    if (navigator.share) {
+      try {
+        await navigator.share(options)
+        return
+      } catch (error: unknown) {
+        shareFailed = true
+
+        const err = error as { name?: string; message?: string }
+        const name = err?.name
+        const message = err?.message || ''
+
+        // If the user explicitly cancels or denies the share, do not fallback.
+        if (
+          name === 'AbortError' ||
+          name === 'NotAllowedError' ||
+          message.toLowerCase().includes('cancel')
+        ) {
+          return
+        }
+      }
+    }
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      // Fallback to copying the URL to the clipboard when share is unavailable
+      // or when it failed for a non-user-cancel reason.
+      if (!navigator.share || shareFailed) {
+        await navigator.clipboard.writeText(options.url)
+      }
+    }
   }
 }
