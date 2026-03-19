@@ -22,6 +22,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { toast } = useToast()
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const savedIdsRef = useRef<Set<string>>(savedIds)
   const pendingWrites = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
   // Load saved listings from Supabase when user signs in
@@ -50,6 +51,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
     setSavedIds((prev) => {
       const next = new Set(prev)
       isSaving ? next.add(listingId) : next.delete(listingId)
+      savedIdsRef.current = next
       return next
     })
 
@@ -63,25 +65,22 @@ export function SavedProvider({ children }: { children: ReactNode }) {
         listingId,
         setTimeout(() => {
           pendingWrites.current.delete(listingId)
-          // Read current state to get the final value after debounce
-          setSavedIds((current) => {
-            const shouldBeSaved = current.has(listingId)
-            if (shouldBeSaved) {
-              supabase
-                .from('saved_listings')
-                .upsert(
-                  { user_id: userId, listing_id: listingId },
-                  { onConflict: 'user_id,listing_id' },
-                )
-            } else {
-              supabase
-                .from('saved_listings')
-                .delete()
-                .eq('user_id', userId)
-                .eq('listing_id', listingId)
-            }
-            return current // no mutation
-          })
+          // Read final state from ref (pure — no side-effects in state setters)
+          const shouldBeSaved = savedIdsRef.current.has(listingId)
+          if (shouldBeSaved) {
+            supabase
+              .from('saved_listings')
+              .upsert(
+                { user_id: userId, listing_id: listingId },
+                { onConflict: 'user_id,listing_id' },
+              )
+          } else {
+            supabase
+              .from('saved_listings')
+              .delete()
+              .eq('user_id', userId)
+              .eq('listing_id', listingId)
+          }
         }, SAVE_DEBOUNCE_MS),
       )
     }

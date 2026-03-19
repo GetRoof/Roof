@@ -30,15 +30,21 @@ async function flush() {
     const { data: { session } } = await supabase.auth.getSession()
     const user_id = session?.user?.id ?? null
 
-    await supabase.from('analytics_events').insert(
+    const { error } = await supabase.from('analytics_events').insert(
       batch.map((e) => ({
         user_id,
         event: e.event,
         properties: e.properties,
       })),
     )
+
+    // Re-queue on failure so events aren't permanently lost
+    if (error) {
+      queue.unshift(...batch)
+    }
   } catch {
-    // Silently ignore — analytics should never break the app
+    // Re-queue on network error — will retry on next flush
+    queue.unshift(...batch)
   }
 }
 

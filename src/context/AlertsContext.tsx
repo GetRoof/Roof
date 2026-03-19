@@ -152,7 +152,6 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   }, [user, loadAlerts])
 
   const addAlert = useCallback((data: Omit<Alert, 'id' | 'createdAt'>) => {
-    toast('Alert created', '🔔')
     track('alert_created', {
       name: data.name,
       cities: data.cities,
@@ -166,13 +165,15 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         .insert(alertToRow(user.id, data))
         .select()
         .single()
-        .then(({ data: row }) => {
-          if (row) setAlerts((prev) => {
-            const alert = rowToAlert(row)
-            // First alert becomes the main alert
-            if (prev.length === 0) alert.isMain = true
-            return [...prev, alert]
-          })
+        .then(({ data: row, error }) => {
+          if (row && !error) {
+            setAlerts((prev) => {
+              const alert = rowToAlert(row)
+              if (prev.length === 0) alert.isMain = true
+              return [...prev, alert]
+            })
+            toast('Alert created', '🔔')
+          }
         })
     } else {
       setAlerts((prev) => {
@@ -180,6 +181,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         if (prev.length === 0) alert.isMain = true
         return [...prev, alert]
       })
+      toast('Alert created', '🔔')
     }
   }, [user, toast, setAlerts])
 
