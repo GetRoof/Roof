@@ -19,8 +19,8 @@ export function useAppRating() {
       try {
         if (Capacitor.isNativePlatform()) {
           // Use native SKStoreReviewController on iOS
-          const { RateApp } = await import('capacitor-rate-app')
-          await RateApp.requestReview()
+          const { AppReview } = await import('@capawesome/capacitor-app-review')
+          await AppReview.requestReview()
         } else {
           // Web fallback — navigate to App Store directly
           window.location.href = 'https://apps.apple.com/app/roof'
