@@ -42,12 +42,30 @@ export default function RoomsPage() {
   const { listings, loading, refresh } = useListings()
   const isOnline = useOnlineStatus()
   const [refreshFailed, setRefreshFailed] = useState(false)
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleRefresh = useCallback(async () => {
     const success = await refresh()
     setRefreshFailed(!success)
-    if (!success) setTimeout(() => setRefreshFailed(false), 3_000)
+    if (!success) {
+      if (refreshTimeoutRef.current !== null) {
+        clearTimeout(refreshTimeoutRef.current)
+      }
+      refreshTimeoutRef.current = setTimeout(() => {
+        setRefreshFailed(false)
+        refreshTimeoutRef.current = null
+      }, 3_000)
+    }
   }, [refresh])
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current !== null) {
+        clearTimeout(refreshTimeoutRef.current)
+        refreshTimeoutRef.current = null
+      }
+    }
+  }, [])
 
   // Derived from real Supabase data — no dummy fallbacks
   const allCities = useMemo(() => [...new Set(listings.map((l) => l.city))].sort(), [listings])
