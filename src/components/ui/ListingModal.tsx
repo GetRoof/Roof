@@ -124,7 +124,7 @@ export default function ListingModal({ listing, onClose, onViewed }: Props) {
             <div className="flex-1 overflow-y-auto scrollbar-hide overscroll-contain flex flex-col relative">
               {/* Hero image — scrolls with content */}
               <div className="relative w-full aspect-[4/3] max-h-[350px] flex-shrink-0 bg-secondary">
-                <ImageGallery images={listing.images} alt={listing.title} fill />
+                <ImageGallery images={listing.images ?? []} alt={listing.title} fill />
                 
                 {/* Source badges inside image */}
                 <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none">

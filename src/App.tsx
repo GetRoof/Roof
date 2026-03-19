@@ -7,6 +7,7 @@ import { NotificationsProvider } from './context/NotificationsContext'
 import { AlertsProvider } from './context/AlertsContext'
 import { ListingsProvider } from './context/ListingsContext'
 import { ViewedProvider } from './context/ViewedContext'
+import { ToastProvider } from './context/ToastContext'
 
 // Pages
 import SplashPage from './pages/SplashPage'
@@ -40,6 +41,7 @@ if ((window as any).Capacitor?.isNative) {
 export default function App() {
   return (
     <AuthProvider>
+    <ToastProvider>
     <OnboardingProvider>
       <SavedProvider>
         <NotificationsProvider>
@@ -47,7 +49,7 @@ export default function App() {
           <AlertsProvider>
           <ViewedProvider>
           <BrowserRouter>
-            <div className="phone-shell">
+            <div className="phone-shell" id="phone-shell">
               <AnimatePresence mode="wait">
                 <Routes>
                   <Route path="/" element={<Navigate to="/splash" replace />} />
@@ -88,6 +90,7 @@ export default function App() {
         </NotificationsProvider>
       </SavedProvider>
     </OnboardingProvider>
+    </ToastProvider>
     </AuthProvider>
   )
 }

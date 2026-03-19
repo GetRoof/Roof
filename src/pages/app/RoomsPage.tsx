@@ -128,6 +128,7 @@ export default function RoomsPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              data-testid="filter-button"
               onClick={() => setShowFilters(true)}
               className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                 activeFilterCount > 0
@@ -261,6 +262,11 @@ export default function RoomsPage() {
         open={showFilters}
         filters={filters}
         selectedCities={selectedCities}
+        listings={alertFiltered.filter((l) => {
+          if (selectedCities.length > 0 && !selectedCities.includes(l.city)) return false
+          if (platformFilter !== 'All' && l.source !== platformFilter) return false
+          return true
+        })}
         onChange={handleFiltersChange}
         onClose={() => setShowFilters(false)}
         onReset={() => setFilters(DEFAULT_FILTERS)}

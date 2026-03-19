@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion'
+import { Camera } from 'lucide-react'
 
 interface Props {
   images: string[]
@@ -15,26 +16,33 @@ const swipePower = (offset: number, velocity: number) =>
 export default function ImageGallery({ images, alt = '', fill = false }: Props) {
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState(0)
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
   const constraintsRef = useRef<HTMLDivElement>(null)
 
   // Ensure at least one image
   const photos = images.length > 0 ? images : []
   if (photos.length === 0) {
     return (
-      <div className={`w-full bg-secondary rounded-t-[28px] ${fill ? 'h-full' : 'aspect-[4/3]'}`} />
+      <div className={`w-full bg-secondary flex items-center justify-center ${fill ? 'h-full' : 'aspect-[4/3]'}`}>
+        <div className="flex flex-col items-center gap-2">
+          <Camera size={24} strokeWidth={1.5} className="text-muted" />
+          <p className="text-xs text-muted font-medium">No images available</p>
+        </div>
+      </div>
     )
   }
 
   // Single image — no swipe needed
   if (photos.length === 1) {
-    return (
+    return failedImages.has(0) ? (
+      <div className={`w-full bg-secondary flex items-center justify-center ${fill ? 'h-full' : 'aspect-[4/3]'}`}>
+        <Camera size={24} strokeWidth={1.5} className="text-muted" />
+      </div>
+    ) : (
       <img
         src={photos[0]}
         alt={alt}
-        onError={(e) => {
-          e.currentTarget.onerror = null
-          e.currentTarget.style.opacity = '0'
-        }}
+        onError={() => setFailedImages(new Set([0]))}
         className={`w-full object-cover ${fill ? 'h-full' : 'aspect-[4/3]'}`}
       />
     )
@@ -81,30 +89,41 @@ export default function ImageGallery({ images, alt = '', fill = false }: Props) 
       {/* Swipeable image area */}
       <div className={`relative w-full overflow-hidden ${fill ? 'h-full' : 'aspect-[4/3]'}`}>
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
-          <motion.img
-            key={`slide-${index}`}
-            src={photos[index]}
-            alt={`${alt} ${index + 1}`}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: 'spring', stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={1}
-            onDragEnd={handleDragEnd}
-            onError={(e) => {
-              const target = e.currentTarget as HTMLImageElement
-              target.onerror = null
-              target.style.opacity = '0'
-            }}
-            className="absolute inset-0 w-full h-full object-cover cursor-grab active:cursor-grabbing"
-          />
+          {failedImages.has(index) ? (
+            <motion.div
+              key={`failed-${index}`}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+              className="absolute inset-0 w-full h-full bg-secondary flex items-center justify-center"
+            >
+              <Camera size={24} strokeWidth={1.5} className="text-muted" />
+            </motion.div>
+          ) : (
+            <motion.img
+              key={`slide-${index}`}
+              src={photos[index]}
+              alt={`${alt} ${index + 1}`}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: 'spring', stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={1}
+              onDragEnd={handleDragEnd}
+              onError={() => setFailedImages((prev) => new Set(prev).add(index))}
+              className="absolute inset-0 w-full h-full object-cover cursor-grab active:cursor-grabbing"
+            />
+          )}
         </AnimatePresence>
       </div>
 
