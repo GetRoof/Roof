@@ -6,7 +6,7 @@ interface ListingsContextType {
   listings: Listing[]
   loading: boolean
   refreshing: boolean
-  refresh: () => Promise<void>
+  refresh: () => Promise<boolean>
   newCount: number
   clearNewCount: () => void
 }
@@ -15,7 +15,7 @@ const ListingsContext = createContext<ListingsContextType>({
   listings: [],
   loading: true,
   refreshing: false,
-  refresh: async () => {},
+  refresh: async () => true,
   newCount: 0,
   clearNewCount: () => {},
 })
@@ -163,15 +163,25 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<boolean> => {
     setRefreshing(true)
     // Trigger scrapers in the background (fire & forget)
     supabase.functions.invoke('trigger-scrape').catch(() => {})
     // Immediately re-fetch current listings from DB
-    const data = await fetchFromSupabase()
-    setListings(data)
-    data.forEach((l) => knownIds.current.add(l.id))
-    setRefreshing(false)
+    try {
+      const data = await fetchFromSupabase()
+      if (data.length > 0) {
+        setListings(data)
+        data.forEach((l) => knownIds.current.add(l.id))
+        setRefreshing(false)
+        return true
+      }
+      setRefreshing(false)
+      return false
+    } catch {
+      setRefreshing(false)
+      return false
+    }
   }, [])
 
   const clearNewCount = useCallback(() => setNewCount(0), [])
