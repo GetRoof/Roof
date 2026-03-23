@@ -275,13 +275,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = async () => {
     if (!session?.user) return { error: 'Not signed in' }
     try {
-      const { data: { session: s } } = await supabase.auth.getSession()
-      const { error } = await supabase.functions.invoke('delete-account', {
-        headers: s?.access_token
-          ? { Authorization: `Bearer ${s.access_token}` }
-          : {},
-      })
-      if (error) return { error: error.message || 'Failed to delete account' }
+      // Refresh to ensure a valid JWT
+      await supabase.auth.refreshSession()
+
+      const { data, error: fnError } = await supabase.functions.invoke('delete-account')
+      if (fnError) {
+        // supabase.functions.invoke wraps non-2xx as FunctionsHttpError
+        // Try to extract the real error from the response context
+        const ctx = (fnError as any).context
+        let detail = fnError.message
+        if (ctx instanceof Response) {
+          try { const b = await ctx.json(); detail = b.error || detail } catch {}
+        }
+        return { error: detail || 'Failed to delete account' }
+      }
+
       await supabase.auth.signOut()
       return { error: null }
     } catch {
