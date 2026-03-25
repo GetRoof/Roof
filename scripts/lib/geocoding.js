@@ -4,6 +4,8 @@
  * Uses OpenStreetMap Nominatim (free fallback)
  */
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 async function geocode(address, city = '', zipcode = '') {
   if (!address && !zipcode) return null;
 
@@ -15,38 +17,49 @@ async function geocode(address, city = '', zipcode = '') {
   queryParts.push('Netherlands');
 
   const query = queryParts.join(', ');
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
 
+  // 1. Try Nominatim (Primary)
   try {
-    // Nominatim requires a User-Agent
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'RoofApp-Scraper/1.0 (contact@roof.app)',
-      }
+    // Nominatim requires a User-Agent and recommends 1 request per second
+    await sleep(1000); // Respect TOS
+    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+    const res = await fetch(nominatimUrl, {
+      headers: { 'User-Agent': 'RoofApp-Scraper/1.1 (contact@roof.app)' }
     });
 
-    if (!res.ok) {
-      console.warn(`    ⚠️ Geocoding failed for ${query}: ${res.statusText}`);
-      return null;
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        console.log(`    🌍 Geocoded (Nominatim): ${query} -> (${lat}, ${lon})`);
+        return { lat, lon, display_name: data[0].display_name };
+      }
+    } else if (res.status === 429) {
+      console.warn(`    ⚠️ Nominatim "Too Many Requests". Falling back...`);
     }
-
-    const data = await res.json();
-    if (data && data.length > 0) {
-      const lat = parseFloat(data[0].lat);
-      const lon = parseFloat(data[0].lon);
-      console.log(`    🌍 Geocoded: ${query} -> (${lat}, ${lon})`);
-      return {
-        lat,
-        lon,
-        display_name: data[0].display_name
-      };
-    }
-    
-    return null;
   } catch (err) {
-    console.error(`    ❌ Geocoding error for ${query}:`, err.message);
-    return null;
+    console.warn(`    ⚠️ Nominatim error: ${err.message}. Falling back...`);
   }
+
+  // 2. Try Photon (Fallback - OSM Based)
+  try {
+    const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
+    const res = await fetch(photonUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.features && data.features.length > 0) {
+        const feature = data.features[0];
+        const [lon, lat] = feature.geometry.coordinates; // Photon returns [lon, lat]
+        console.log(`    🌍 Geocoded (Photon/OSM): ${query} -> (${lat}, ${lon})`);
+        return { lat, lon, display_name: feature.properties.name || query };
+      }
+    }
+  } catch (err) {
+    console.error(`    ❌ Photon fallback error: ${err.message}`);
+  }
+  
+  return null;
 }
 
 /**
