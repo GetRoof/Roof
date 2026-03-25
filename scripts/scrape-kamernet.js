@@ -13,7 +13,7 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
-const { geocode } = require('./lib/geocoding')
+const { extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -211,17 +211,21 @@ async function main() {
   })
 
   // Geocode listings that don't have coordinates (Kamernet usually needs geocoding)
-  console.log('\n🌍 Geocoding Kamernet listings...')
+  console.log('\n🌍 Geocoding Kamernet listings missing coordinates...')
   for (const l of all) {
     if (!l.latitude || !l.longitude) {
-      const geo = await geocode(l.neighborhood || l.title, l.city)
+      const zipcode = extractZipcodeFromHtml(l.title + ' ' + (l.neighborhood || ''))
+      const geo = await geocode(l.neighborhood || l.title, l.city, zipcode)
+      
       if (geo) {
         l.latitude = geo.lat
         l.longitude = geo.lon
-        process.stdout.write('.')
+        console.log(`    ✅ Geocoded: ${l.title} -> (${geo.lat}, ${geo.lon})`)
       } else {
-        process.stdout.write('x')
+        console.log(`    ⚠️  Could not resolve location for: ${l.title}`)
       }
+    } else {
+      console.log(`    📍 Already has coordinates: ${l.title} -> (${l.latitude}, ${l.longitude})`)
     }
   }
   console.log('\n')

@@ -12,7 +12,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') })
 const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
-const { extractCoordsFromHtml, geocode } = require('./lib/geocoding')
+const { extractCoordsFromHtml, extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -318,17 +318,23 @@ async function main() {
   })
 
   // Geocode listings that don't have coordinates
-  console.log('\n🌍 Geocoding HousingAnywhere listings...')
+  console.log('\n🌍 Geocoding HousingAnywhere listings missing coordinates...')
   for (const l of all) {
     if (!l.latitude || !l.longitude) {
-      const geo = await geocode(l.neighborhood || l.title, l.city)
+      // HousingAnywhere doesn't easily show zipcodes in search results, 
+      // but let's try to extract if we find it in title/neighborhood
+      const zipcode = extractZipcodeFromHtml(l.title + ' ' + (l.neighborhood || ''))
+      const geo = await geocode(l.neighborhood || l.title, l.city, zipcode)
+      
       if (geo) {
         l.latitude = geo.lat
         l.longitude = geo.lon
-        process.stdout.write('.')
+        console.log(`    ✅ Geocoded: ${l.title} -> (${geo.lat}, ${geo.lon})`)
       } else {
-        process.stdout.write('x')
+        console.log(`    ⚠️  Could not resolve location for: ${l.title}`)
       }
+    } else {
+      console.log(`    📍 Already has coordinates: ${l.title} -> (${l.latitude}, ${l.longitude})`)
     }
   }
   console.log('\n')

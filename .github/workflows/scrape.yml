@@ -21,6 +21,7 @@ on:
           - kamernl
           - huurstunt
           - 123wonen
+          - funda
       city:
         description: 'City to scrape'
         required: true
@@ -46,7 +47,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          ALL='["pararius", "kamernet", "huurwoningen", "housinganywhere", "directwonen", "rentola", "kamernl", "huurstunt", "123wonen"]'
+          ALL='["pararius", "kamernet", "huurwoningen", "housinganywhere", "directwonen", "rentola", "kamernl", "huurstunt", "123wonen", "funda"]'
           INPUT="${{ github.event.inputs.scraper }}"
           
           if [[ "$INPUT" == "all" || "${{ github.event_name }}" == "schedule" || "$INPUT" == "" ]]; then
