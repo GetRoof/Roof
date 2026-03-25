@@ -12,6 +12,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') })
 const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
+const { extractCoordsFromHtml, geocode } = require('./lib/geocoding')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -115,6 +116,8 @@ async function scrapePage(page, url, city) {
                 neighborhood,
                 listingType,
                 furnished: l.furnished ? 'furnished' : null,
+                latitude: l.lat || l.latitude || (l.location?.lat) || null,
+                longitude: l.lng || l.longitude || (l.location?.lon || l.location?.lng) || null,
               } : null
             } catch { return null }
           }).filter(Boolean)
@@ -263,6 +266,8 @@ async function upsertListings(listings) {
       url: l.url,
       is_active: true,
       last_seen_at: now,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     return row
@@ -311,6 +316,22 @@ async function main() {
     console.log(`    📍 ${l.neighborhood}`)
     console.log(`    🔗 ${l.url}`)
   })
+
+  // Geocode listings that don't have coordinates
+  console.log('\n🌍 Geocoding HousingAnywhere listings...')
+  for (const l of all) {
+    if (!l.latitude || !l.longitude) {
+      const geo = await geocode(l.neighborhood || l.title, l.city)
+      if (geo) {
+        l.latitude = geo.lat
+        l.longitude = geo.lon
+        process.stdout.write('.')
+      } else {
+        process.stdout.write('x')
+      }
+    }
+  }
+  console.log('\n')
 
   await upsertListings(all)
   console.log('\n' + '━'.repeat(60))

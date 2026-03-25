@@ -1,0 +1,65 @@
+name: Funda Scrape
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # Every day at 2 AM
+  workflow_dispatch:
+    inputs:
+      city:
+        description: 'City to scrape'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - Amsterdam
+          - Rotterdam
+          - Utrecht
+          - Den Haag
+      max:
+        description: 'Max items per city'
+        required: true
+        default: '1000'
+
+jobs:
+  funda:
+    name: Funda Scraper
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --prefix scripts
+
+      - name: Run Funda Scraper
+        run: |
+          CITY_INPUT="${{ github.event.inputs.city }}"
+          if [[ "$CITY_INPUT" == "" || "$CITY_INPUT" == "all" ]]; then
+            CITIES=("Amsterdam" "Rotterdam" "Utrecht" "Den Haag")
+          else
+            CITIES=("$CITY_INPUT")
+          fi
+          
+          MAX_INPUT="${{ github.event.inputs.max }}"
+          if [[ "$MAX_INPUT" == "" ]]; then MAX_INPUT="1000"; fi
+
+          for CITY in "${CITIES[@]}"; do
+            echo "::group::🚀 Scraping Funda in $CITY"
+            node scripts/scrape-funda.js --city "$CITY" --max "$MAX_INPUT"
+            echo "::endgroup::"
+            
+            # Wait between cities to avoid IP flag
+            echo "Sleeping for 60s..."
+            sleep 60
+          done

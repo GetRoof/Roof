@@ -13,6 +13,7 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
+const { geocode } = require('./lib/geocoding')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -158,6 +159,8 @@ async function upsertListings(listings) {
       url: l.url,
       is_active: true,
       last_seen_at: now,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     return row
@@ -206,6 +209,22 @@ async function main() {
     console.log(`    📍 ${l.neighborhood}`)
     console.log(`    🔗 ${l.url}`)
   })
+
+  // Geocode listings that don't have coordinates (Kamernet usually needs geocoding)
+  console.log('\n🌍 Geocoding Kamernet listings...')
+  for (const l of all) {
+    if (!l.latitude || !l.longitude) {
+      const geo = await geocode(l.neighborhood || l.title, l.city)
+      if (geo) {
+        l.latitude = geo.lat
+        l.longitude = geo.lon
+        process.stdout.write('.')
+      } else {
+        process.stdout.write('x')
+      }
+    }
+  }
+  console.log('\n')
 
   await upsertListings(all)
   console.log('\n' + '━'.repeat(60))
