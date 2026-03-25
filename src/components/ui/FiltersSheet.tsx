@@ -324,13 +324,13 @@ export default function FiltersSheet({ open, filters, selectedCities = [], listi
       {open && (
         <>
           <motion.div
-            className="absolute inset-0 bg-black/40 z-40"
+            className="absolute inset-0 bg-black/40 z-[3000]"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
           />
 
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 max-h-[92%] flex flex-col"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-[3001] max-h-[92%] flex flex-col"
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 300 }}
           >

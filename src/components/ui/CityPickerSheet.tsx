@@ -92,7 +92,7 @@ export default function CityPickerSheet({ open, cities, selectedCities, onChange
       {open && (
         <>
           <motion.div
-            className="absolute inset-0 bg-black/50 z-40"
+            className="absolute inset-0 bg-black/50 z-[3000]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export default function CityPickerSheet({ open, cities, selectedCities, onChange
           />
 
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 flex flex-col max-h-[92%]"
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-[3001] flex flex-col max-h-[92%]"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
