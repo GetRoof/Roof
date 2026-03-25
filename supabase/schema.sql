@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS listings (
   image_url     TEXT,
   available_from TEXT,
   description   TEXT,
+  latitude      DECIMAL(9,6),
+  longitude     DECIMAL(9,6),
   is_new        BOOLEAN     DEFAULT false,
   is_active     BOOLEAN     DEFAULT true,       -- set false when listing disappears
   first_seen_at TIMESTAMPTZ DEFAULT NOW(),

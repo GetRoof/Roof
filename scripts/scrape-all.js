@@ -31,6 +31,7 @@ const scrapers = [
   { name: 'Kamer.nl',        file: 'scrape-kamernl.js',        extra: '--type room' },
   { name: 'Huurstunt',       file: 'scrape-huurstunt.js',      extra: '' },
   { name: '123Wonen',        file: 'scrape-123wonen.js',       extra: '' },
+  { name: 'Funda',           file: 'scrape-funda.js',          extra: '' },
 ]
 
 console.log('═'.repeat(60))

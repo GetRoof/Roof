@@ -2,17 +2,75 @@ name: Scheduled Scrape
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 * * * *"
   workflow_dispatch:
+    inputs:
+      scraper:
+        description: 'Scraper to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - pararius
+          - kamernet
+          - huurwoningen
+          - housinganywhere
+          - directwonen
+          - rentola
+          - kamernl
+          - huurstunt
+          - 123wonen
+          - funda
+      city:
+        description: 'City to scrape'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - Amsterdam
+          - Rotterdam
+          - Utrecht
+          - Den Haag
+      max:
+        description: 'Max items per city'
+        required: true
+        default: '1000'
 
 jobs:
-  scrape:
+  # Job to determine which scrapers to run
+  setup-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    outputs:
+      scrapers: ${{ steps.set-matrix.outputs.scrapers }}
+    steps:
+      - id: set-matrix
+        run: |
+          ALL='["pararius", "kamernet", "huurwoningen", "housinganywhere", "directwonen", "rentola", "kamernl", "huurstunt", "123wonen", "funda"]'
+          INPUT="${{ github.event.inputs.scraper }}"
+          
+          if [[ "$INPUT" == "all" || "${{ github.event_name }}" == "schedule" || "$INPUT" == "" ]]; then
+            echo "scrapers=$ALL" >> $GITHUB_OUTPUT
+          else
+            echo "scrapers=[\"$INPUT\"]" >> $GITHUB_OUTPUT
+          fi
+
+  scrape:
+    needs: setup-matrix
+    name: Scrape (${{ matrix.scraper }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        scraper: ${{ fromJSON(needs.setup-matrix.outputs.scrapers) }}
 
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      # Required for Node 24 support in existing actions
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repo
@@ -23,27 +81,54 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install scraper dependencies
+      - name: Install dependencies
         run: npm ci --prefix scripts
 
       - name: Install Playwright browsers
         run: npx --prefix scripts playwright install chromium --with-deps
 
-      - name: Scrape Amsterdam
-        continue-on-error: true
-        run: node scripts/scrape-all.js --city Amsterdam --max 2000
+      - name: Run Scraper
+        run: |
+          CITY_INPUT="${{ github.event.inputs.city }}"
+          if [[ "$CITY_INPUT" == "" || "$CITY_INPUT" == "all" ]]; then
+            CITIES=("Amsterdam" "Rotterdam" "Utrecht" "Den Haag")
+          else
+            CITIES=("$CITY_INPUT")
+          fi
+          
+          MAX_INPUT="${{ github.event.inputs.max }}"
+          if [[ "$MAX_INPUT" == "" ]]; then MAX_INPUT="1000"; fi
 
-      - name: Scrape Rotterdam
-        continue-on-error: true
-        run: node scripts/scrape-all.js --city Rotterdam --max 2000
+          for CITY in "${CITIES[@]}"; do
+            echo "::group::🚀 Scraping $CITY with ${{ matrix.scraper }}"
+            node scripts/scrape-${{ matrix.scraper }}.js --city "$CITY" --max "$MAX_INPUT"
+            echo "::endgroup::"
+          done
 
-      - name: Scrape Utrecht
-        continue-on-error: true
-        run: node scripts/scrape-all.js --city Utrecht --max 2000
+  post-process:
+    name: Post-Scrape Cleanup
+    needs: scrape
+    runs-on: ubuntu-latest
+    if: always()
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      # Required for Node 24 support in existing actions
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Scrape Den Haag
-        continue-on-error: true
-        run: node scripts/scrape-all.js --city "Den Haag" --max 2000
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --prefix scripts
 
       - name: Deactivate stale listings
         run: node scripts/deactivate-stale.js
+
+      - name: Process images
+        run: node scripts/fix-images.js

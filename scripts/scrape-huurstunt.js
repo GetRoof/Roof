@@ -12,6 +12,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') })
 const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
+const { extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -200,6 +201,8 @@ async function upsertListings(listings) {
       url: l.url,
       is_active: true,
       last_seen_at: now,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     return row
@@ -248,6 +251,27 @@ async function main() {
     console.log(`    📍 ${l.neighborhood || l.city}`)
     console.log(`    🔗 ${l.url}`)
   })
+
+  // Geocode listings that don't have coordinates
+  console.log('\n🌍 Geocoding Huurstunt listings missing coordinates...')
+  for (const l of all) {
+    if (!l.latitude || !l.longitude) {
+      // Huurstunt cards often have partial address/zipcode in title
+      const zipcode = extractZipcodeFromHtml(l.title)
+      const geo = await geocode(l.neighborhood || l.title, l.city, zipcode)
+      
+      if (geo) {
+        l.latitude = geo.lat
+        l.longitude = geo.lon
+        console.log(`    ✅ Geocoded: ${l.title} -> (${geo.lat}, ${geo.lon})`)
+      } else {
+        console.log(`    ⚠️  Could not resolve location for: ${l.title}`)
+      }
+    } else {
+      console.log(`    📍 Already has coordinates: ${l.title} -> (${l.latitude}, ${l.longitude})`)
+    }
+  }
+  console.log('\n')
 
   await upsertListings(all)
   console.log('\n' + '━'.repeat(60))

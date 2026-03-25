@@ -17,7 +17,11 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
+<<<<<<< HEAD
 const { geocodeAddress, determinePrecision, buildAddressRaw } = require('./lib/geocode')
+=======
+const { extractCoordsFromHtml, extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
+>>>>>>> origin/main
 
 // ---------------------------------------------------------------------------
 // Supabase client (service role — bypasses RLS to allow scraper writes)
@@ -252,6 +256,27 @@ async function scrapeDetailImages(page, listings, maxDetail = 20) {
         listing.imageUrl = listing.imageUrl || images[0]
         console.log(`    ${listing.title.slice(0, 40)}... — ${images.length} images`)
       }
+
+      // Extract coordinates from detail page HTML
+      const html = await page.content()
+      const coords = extractCoordsFromHtml(html)
+      const zipcode = extractZipcodeFromHtml(html)
+
+      if (coords) {
+        listing.latitude = coords.lat
+        listing.longitude = coords.lon
+        console.log(`    📍 Coordinates found in HTML: ${coords.lat}, ${coords.lon}`)
+      } else {
+        // Fallback: Geocode if not found in HTML
+        const geoResult = await geocode(listing.title, listing.city, zipcode)
+        if (geoResult) {
+          listing.latitude = geoResult.lat
+          listing.longitude = geoResult.lon
+          console.log(`    📍 Geocoded (${zipcode || 'no zipcode'}): ${geoResult.lat}, ${geoResult.lon}`)
+        } else {
+          console.log(`    ⚠️  Could not resolve location for ${listing.title}`)
+        }
+      }
     } catch (err) {
       // Non-fatal: keep the listing with whatever images we already have
       console.log(`    Skipped detail page: ${err.message.slice(0, 60)}`)
@@ -304,6 +329,7 @@ async function upsertListings(listings) {
       description: null,
       is_active: true,
       last_seen_at: now,
+<<<<<<< HEAD
       address_raw: addressRaw || null,
       address_precision: precision,
     }
@@ -313,6 +339,10 @@ async function upsertListings(listings) {
       row.geocoded_at = now
       row.geocode_attempts = 1
       process.stdout.write('.')
+=======
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
+>>>>>>> origin/main
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     if (l.imageUrls && l.imageUrls.length > 0) row.images = JSON.stringify(l.imageUrls)

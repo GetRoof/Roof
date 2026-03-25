@@ -1,0 +1,37 @@
+name: Reconcile Listing Locations
+
+on:
+  schedule:
+    - cron: '30 2 * * *' # Every night at 02:30 UTC
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Number of listings to process'
+        required: false
+        default: '100'
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Reconciliation Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scripts/reconcile-locations.js
+        # The script handles its own limits, but we could pass the input here if needed.

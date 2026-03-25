@@ -13,7 +13,11 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
+<<<<<<< HEAD
 const { geocodeAddress, determinePrecision, buildAddressRaw } = require('./lib/geocode')
+=======
+const { extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
+>>>>>>> origin/main
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -166,6 +170,7 @@ async function upsertListings(listings) {
       url: l.url,
       is_active: true,
       last_seen_at: now,
+<<<<<<< HEAD
       address_raw: addressRaw || null,
       address_precision: precision,
     }
@@ -175,6 +180,10 @@ async function upsertListings(listings) {
       row.geocoded_at = now
       row.geocode_attempts = 1
       process.stdout.write('.')
+=======
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
+>>>>>>> origin/main
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     rows.push(row)
@@ -224,6 +233,26 @@ async function main() {
     console.log(`    📍 ${l.neighborhood}`)
     console.log(`    🔗 ${l.url}`)
   })
+
+  // Geocode listings that don't have coordinates (Kamernet usually needs geocoding)
+  console.log('\n🌍 Geocoding Kamernet listings missing coordinates...')
+  for (const l of all) {
+    if (!l.latitude || !l.longitude) {
+      const zipcode = extractZipcodeFromHtml(l.title + ' ' + (l.neighborhood || ''))
+      const geo = await geocode(l.neighborhood || l.title, l.city, zipcode)
+      
+      if (geo) {
+        l.latitude = geo.lat
+        l.longitude = geo.lon
+        console.log(`    ✅ Geocoded: ${l.title} -> (${geo.lat}, ${geo.lon})`)
+      } else {
+        console.log(`    ⚠️  Could not resolve location for: ${l.title}`)
+      }
+    } else {
+      console.log(`    📍 Already has coordinates: ${l.title} -> (${l.latitude}, ${l.longitude})`)
+    }
+  }
+  console.log('\n')
 
   await upsertListings(all)
   console.log('\n' + '━'.repeat(60))
