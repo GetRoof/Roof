@@ -17,6 +17,7 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
+const { extractCoordsFromHtml, geocode } = require('./lib/geocoding')
 
 // ---------------------------------------------------------------------------
 // Supabase client (service role — bypasses RLS to allow scraper writes)
@@ -242,6 +243,23 @@ async function scrapeDetailImages(page, listings, maxDetail = 20) {
         listing.imageUrl = listing.imageUrl || images[0]
         console.log(`    ${listing.title.slice(0, 40)}... — ${images.length} images`)
       }
+
+      // Extract coordinates from detail page HTML
+      const html = await page.content()
+      const coords = extractCoordsFromHtml(html)
+      if (coords) {
+        listing.latitude = coords.lat
+        listing.longitude = coords.lon
+        console.log(`    📍 Coordinates found: ${coords.lat}, ${coords.lon}`)
+      } else {
+        // Fallback: Geocode if not found in HTML
+        const geoResult = await geocode(listing.title, listing.city)
+        if (geoResult) {
+          listing.latitude = geoResult.lat
+          listing.longitude = geoResult.lon
+          console.log(`    📍 Geocoded: ${geoResult.lat}, ${geoResult.lon}`)
+        }
+      }
     } catch (err) {
       // Non-fatal: keep the listing with whatever images we already have
       console.log(`    Skipped detail page: ${err.message.slice(0, 60)}`)
@@ -288,6 +306,8 @@ async function upsertListings(listings) {
       description: null,
       is_active: true,
       last_seen_at: now,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     if (l.imageUrls && l.imageUrls.length > 0) row.images = JSON.stringify(l.imageUrls)

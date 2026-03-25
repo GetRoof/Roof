@@ -12,10 +12,19 @@
  * Required env: SUPABASE_SERVICE_KEY
  */
 
+const USER_AGENTS = [
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1'
+]
+const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+
 require('dotenv').config()
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
+const { geocode } = require('./lib/geocoding')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -48,19 +57,25 @@ async function fetchFundaListings(city, budgetMax, page = 1) {
   // Funda's search API endpoint (returns JSON when Accept header requests it)
   const searchUrl = `https://www.funda.nl/zoeken/huur/?selected_area=%5B%22${citySlug}%22%5D&price=%220-${budgetMax}%22&object_type=%5B%22apartment%22,%22house%22%5D&search_result=${page}`
 
-  console.log(`  Fetching page ${page}: ${searchUrl.slice(0, 80)}...`)
+  const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)]
+  await sleep(1000 + Math.random() * 2000)
 
   const res = await fetch(searchUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      'User-Agent': userAgent,
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
       'Referer': 'https://www.funda.nl/',
+      'Cache-Control': 'no-cache',
     },
   })
 
   if (!res.ok) {
-    console.log(`  ❌ Funda returned ${res.status} — bot protection active`)
+    if (res.status === 403) {
+      console.log(`  ℹ️  Funda returned 403 (Forbidden). This is expected under bot protection. Exiting graciously.`)
+    } else {
+      console.log(`  ❌ Funda returned ${res.status} — server error or heavy protection`)
+    }
     return []
   }
 
@@ -116,6 +131,13 @@ async function fetchFundaListings(city, budgetMax, page = 1) {
             city,
             neighborhood,
           })
+          
+          // Try to get coordinates from item if available in search results
+          const lastItem = results[results.length - 1]
+          if (item.location?.lat && item.location?.lng) {
+            lastItem.latitude = item.location.lat
+            lastItem.longitude = item.location.lng
+          }
         }
       }
     } catch (e) {
@@ -184,6 +206,8 @@ async function upsertListings(listings) {
       image_url: hostedImageUrl || l.imageUrl,
       is_active: true,
       last_seen_at: now,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
   }))
 
