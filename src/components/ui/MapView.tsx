@@ -58,15 +58,17 @@ function jitter(coords: [number, number]): [number, number] {
  * 3. Fall back to city center with jitter
  */
 function getInitialCoords(listing: Listing): [number, number] | null {
-  // Check Nominatim cache first
+  // 1. High priority: DB coordinates (most accurate/specific)
+  if (listing.lat !== null && listing.lng !== null) {
+    return [listing.lat, listing.lng]
+  }
+
+  // 2. Medium priority: Geocoder cache (neighborhood/city level)
   const { key } = buildQuery(listing.city, listing.neighborhood)
   const cached = getCached(key)
   if (cached) return [cached.lat, cached.lng]
 
-  // DB coordinates
-  if (listing.lat && listing.lng) return [listing.lat, listing.lng]
-
-  // City center fallback
+  // 3. Fallback: City center with jitter
   const cityCoords = CITY_COORDS[listing.city]
   if (cityCoords) return jitter(cityCoords)
 
