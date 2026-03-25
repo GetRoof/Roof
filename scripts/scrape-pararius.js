@@ -17,11 +17,8 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
-<<<<<<< HEAD
 const { geocodeAddress, determinePrecision, buildAddressRaw } = require('./lib/geocode')
-=======
 const { extractCoordsFromHtml, extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
->>>>>>> origin/main
 
 // ---------------------------------------------------------------------------
 // Supabase client (service role — bypasses RLS to allow scraper writes)
@@ -329,9 +326,10 @@ async function upsertListings(listings) {
       description: null,
       is_active: true,
       last_seen_at: now,
-<<<<<<< HEAD
       address_raw: addressRaw || null,
       address_precision: precision,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
     if (coords) {
       row.lat = coords.lat
@@ -339,10 +337,6 @@ async function upsertListings(listings) {
       row.geocoded_at = now
       row.geocode_attempts = 1
       process.stdout.write('.')
-=======
-      latitude: l.latitude || null,
-      longitude: l.longitude || null,
->>>>>>> origin/main
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     if (l.imageUrls && l.imageUrls.length > 0) row.images = JSON.stringify(l.imageUrls)

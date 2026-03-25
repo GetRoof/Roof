@@ -13,11 +13,8 @@ const { chromium } = require('playwright')
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
-<<<<<<< HEAD
 const { geocodeAddress, determinePrecision, buildAddressRaw } = require('./lib/geocode')
-=======
 const { extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
->>>>>>> origin/main
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -170,9 +167,10 @@ async function upsertListings(listings) {
       url: l.url,
       is_active: true,
       last_seen_at: now,
-<<<<<<< HEAD
       address_raw: addressRaw || null,
       address_precision: precision,
+      latitude: l.latitude || null,
+      longitude: l.longitude || null,
     }
     if (coords) {
       row.lat = coords.lat
@@ -180,10 +178,6 @@ async function upsertListings(listings) {
       row.geocoded_at = now
       row.geocode_attempts = 1
       process.stdout.write('.')
-=======
-      latitude: l.latitude || null,
-      longitude: l.longitude || null,
->>>>>>> origin/main
     }
     if (l.imageUrl) row.image_url = l.imageUrl
     rows.push(row)

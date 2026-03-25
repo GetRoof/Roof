@@ -56,9 +56,9 @@ export default function MapListingCard({ listing, onOpen, onClose, isSaved, onTo
                   onClick={() => onOpen(listing)}
                   className="text-left"
                 >
-                  <p className="text-sm font-semibold text-foreground line-clamp-1">
-                    {listing.addressRaw || listing.title}
-                  </p>
+                      <p className="text-sm font-semibold text-foreground line-clamp-1">
+                        {listing.addressRaw || listing.title}
+                      </p>
                   <p className="text-xs text-muted mt-0.5 line-clamp-1">
                     {listing.city} · {listing.size > 0 ? `${listing.size}m²` : ''} {listing.rooms > 0 ? `· ${listing.rooms} room${listing.rooms > 1 ? 's' : ''}` : ''}
                   </p>

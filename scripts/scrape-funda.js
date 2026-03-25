@@ -24,11 +24,8 @@ require('dotenv').config()
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const uploadImage = require('./lib/upload-image')
-<<<<<<< HEAD
 const { geocodeAddress, determinePrecision, buildAddressRaw } = require('./lib/geocode')
-=======
 const { extractZipcodeFromHtml, geocode } = require('./lib/geocoding')
->>>>>>> origin/main
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wzsdnhzsosonlcgubmxe.supabase.co'
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
@@ -226,13 +223,10 @@ async function upsertListings(listings) {
       image_url: hostedImageUrl || l.imageUrl,
       is_active: true,
       last_seen_at: now,
-<<<<<<< HEAD
       address_raw: addressRaw || null,
       address_precision: precision,
-=======
       latitude: l.latitude || null,
       longitude: l.longitude || null,
->>>>>>> origin/main
     }
     if (coords) {
       row.lat = coords.lat
